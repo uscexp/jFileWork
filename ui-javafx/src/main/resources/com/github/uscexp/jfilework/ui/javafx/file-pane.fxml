@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/23"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.github.uscexp.jfilework.ui.javafx.controller.FilePaneController"
+            style="-fx-background-color: #ffffff;">
+
+    <top>
+        <VBox spacing="4" style="-fx-background-color: #f8f8f8; -fx-border-color: #d0d0d0; -fx-border-width: 0 0 1 0;">
+            <padding>
+                <Insets top="6" right="8" bottom="6" left="8"/>
+            </padding>
+            <Label fx:id="paneTitleLabel" text="Pane" style="-fx-font-weight: bold;"/>
+            <TextField fx:id="pathField" onAction="#onPathEntered" promptText="Enter directory path and press Enter"/>
+        </VBox>
+    </top>
+
+    <center>
+        <TableView fx:id="fileTable">
+            <columns>
+                <TableColumn fx:id="nameColumn" text="Name" prefWidth="260"/>
+                <TableColumn fx:id="sizeColumn" text="Size" prefWidth="100"/>
+                <TableColumn fx:id="modifiedColumn" text="Modified" prefWidth="170"/>
+                <TableColumn fx:id="typeColumn" text="Type" prefWidth="120"/>
+            </columns>
+        </TableView>
+    </center>
+
+</BorderPane>

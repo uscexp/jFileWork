@@ -78,17 +78,17 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <argLine>
-                        --add-opens javafx.graphics/com.sun.javafx.application=ALL-UNNAMED
-                        --add-opens javafx.graphics/com.sun.glass.ui=ALL-UNNAMED
+                        --enable-native-access=ALL-UNNAMED
                         -Dglass.platform=Monocle
                         -Dmonocle.platform=Headless
                         -Dprism.order=sw
                         -Dprism.text=t2k
                         -Dheadless.geometry=1600x1200-32
+                        -Dtestfx.robot=glass
+                        -Dtestfx.headless=true
                     </argLine>
                 </configuration>
             </plugin>
         </plugins>
     </build>
 </project>
-

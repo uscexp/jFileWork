@@ -44,18 +44,10 @@
             <!-- Left Pane — FilePaneController injected in M1 -->
             <VBox fx:id="leftPane" minWidth="200"
                   style="-fx-border-color: #cccccc; -fx-border-width: 0 1 0 0;">
-                <Label fx:id="leftPanePlaceholder"
-                       text="Left Panel — File view coming in M1"
-                       style="-fx-text-fill: #888888; -fx-padding: 16;"
-                       VBox.vgrow="ALWAYS"/>
             </VBox>
 
             <!-- Right Pane — FilePaneController injected in M1 -->
             <VBox fx:id="rightPane" minWidth="200">
-                <Label fx:id="rightPanePlaceholder"
-                       text="Right Panel — File view coming in M1"
-                       style="-fx-text-fill: #888888; -fx-padding: 16;"
-                       VBox.vgrow="ALWAYS"/>
             </VBox>
 
         </SplitPane>
@@ -74,4 +66,3 @@
     </bottom>
 
 </BorderPane>
-
