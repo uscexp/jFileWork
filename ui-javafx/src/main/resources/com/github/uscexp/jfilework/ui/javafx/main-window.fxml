@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/23"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.github.uscexp.jfilework.ui.javafx.controller.MainWindowController"
+            style="-fx-font-size: 13px;">
+
+    <!-- ═══════════════ TOP: MenuBar + ToolBar ═══════════════ -->
+    <top>
+        <VBox>
+            <MenuBar fx:id="menuBar">
+
+                <Menu text="File">
+                    <MenuItem text="Exit" onAction="#onExit"/>
+                </Menu>
+
+                <Menu text="View">
+                    <MenuItem text="Preferences…" onAction="#onPreferences"/>
+                </Menu>
+
+                <!-- Tools menu will be populated dynamically from config in M3 -->
+                <Menu text="Tools"/>
+
+                <Menu text="Help">
+                    <MenuItem text="About jFileWork" onAction="#onAbout"/>
+                </Menu>
+
+            </MenuBar>
+
+            <!-- ToolBar is populated dynamically from config in M3 -->
+            <ToolBar fx:id="toolBar"/>
+        </VBox>
+    </top>
+
+    <!-- ═══════════════ CENTER: Dual-Pane SplitPane ═══════════════ -->
+    <center>
+        <SplitPane fx:id="splitPane" dividerPositions="0.5"
+                   BorderPane.alignment="CENTER">
+
+            <!-- Left Pane — FilePaneController injected in M1 -->
+            <VBox fx:id="leftPane" minWidth="200"
+                  style="-fx-border-color: #cccccc; -fx-border-width: 0 1 0 0;">
+                <Label fx:id="leftPanePlaceholder"
+                       text="Left Panel — File view coming in M1"
+                       style="-fx-text-fill: #888888; -fx-padding: 16;"
+                       VBox.vgrow="ALWAYS"/>
+            </VBox>
+
+            <!-- Right Pane — FilePaneController injected in M1 -->
+            <VBox fx:id="rightPane" minWidth="200">
+                <Label fx:id="rightPanePlaceholder"
+                       text="Right Panel — File view coming in M1"
+                       style="-fx-text-fill: #888888; -fx-padding: 16;"
+                       VBox.vgrow="ALWAYS"/>
+            </VBox>
+
+        </SplitPane>
+    </center>
+
+    <!-- ═══════════════ BOTTOM: Status Bar ═══════════════ -->
+    <bottom>
+        <HBox fx:id="statusBar"
+              style="-fx-background-color: #f0f0f0; -fx-border-color: #cccccc; -fx-border-width: 1 0 0 0;"
+              spacing="8" alignment="CENTER_LEFT">
+            <padding>
+                <Insets top="4" right="8" bottom="4" left="8"/>
+            </padding>
+            <Label fx:id="statusLabel" text="Ready"/>
+        </HBox>
+    </bottom>
+
+</BorderPane>
+
