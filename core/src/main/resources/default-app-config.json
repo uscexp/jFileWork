@@ -5,6 +5,11 @@
     "leftStartPath": "",
     "rightStartPath": ""
   },
+  "security": {
+    "allowOsCommands": false,
+    "allowedExecutables": [],
+    "allowedRoots": []
+  },
   "actions": [
     {
       "id": "copyToOtherPane",

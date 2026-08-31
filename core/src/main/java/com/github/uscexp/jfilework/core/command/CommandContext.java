@@ -11,7 +11,8 @@ public record CommandContext(
         Path inactiveDirectory,
         SelectionSnapshot selection,
         CancellationToken cancellationToken,
-        ProgressSink progressSink
+        ProgressSink progressSink,
+        ProcessOutputSink processOutputSink
 ) {
 
     public CommandContext {
@@ -20,6 +21,7 @@ public record CommandContext(
         selection = selection == null ? new SelectionSnapshot(java.util.List.of()) : selection;
         cancellationToken = cancellationToken == null ? new CancellationToken() : cancellationToken;
         progressSink = progressSink == null ? ProgressSink.NO_OP : progressSink;
+        processOutputSink = processOutputSink == null ? ProcessOutputSink.NO_OP : processOutputSink;
     }
 }
 

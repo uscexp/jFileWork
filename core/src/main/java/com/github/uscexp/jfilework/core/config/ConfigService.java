@@ -80,6 +80,17 @@ public class ConfigService {
         }
 
         UiConfig ui = rawConfig.ui() == null ? UiConfig.defaults() : rawConfig.ui();
+        SecurityConfig security = rawConfig.security() == null ? SecurityConfig.defaults() : new SecurityConfig(
+                rawConfig.security().allowOsCommands(),
+                rawConfig.security().allowedExecutables() == null ? List.of() : rawConfig.security().allowedExecutables().stream()
+                        .filter(value -> value != null && !value.isBlank())
+                        .map(String::trim)
+                        .toList(),
+                rawConfig.security().allowedRoots() == null ? List.of() : rawConfig.security().allowedRoots().stream()
+                        .filter(value -> value != null && !value.isBlank())
+                        .map(String::trim)
+                        .toList()
+        );
         List<ActionConfig> actions = rawConfig.actions() == null ? List.of() : rawConfig.actions().stream()
                 .filter(action -> action != null
                         && action.id() != null && !action.id().isBlank()
@@ -95,7 +106,7 @@ public class ConfigService {
                 ))
                 .toList();
 
-        return new AppConfig(ui, actions);
+        return new AppConfig(ui, actions, security);
     }
 }
 

@@ -7,11 +7,12 @@ import java.util.List;
  */
 public record AppConfig(
         UiConfig ui,
-        List<ActionConfig> actions
+        List<ActionConfig> actions,
+        SecurityConfig security
 ) {
 
     public static AppConfig defaults() {
-        return new AppConfig(UiConfig.defaults(), List.of());
+        return new AppConfig(UiConfig.defaults(), List.of(), SecurityConfig.defaults());
     }
 }
 

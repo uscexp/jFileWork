@@ -39,12 +39,18 @@ public abstract class MainWindowUiTestBase extends FxTestBase {
         System.clearProperty("jfilework.leftStartPath");
         System.clearProperty("jfilework.rightStartPath");
         System.clearProperty("jfilework.config");
+        System.clearProperty("jfilework.session");
+        System.clearProperty("jfilework.command.artificialDelayMs");
     }
 
     protected static Path writeConfigFile(String fileName, String content) throws IOException {
         Path configFile = Files.createTempFile(fileName, ".json");
         Files.writeString(configFile, content, StandardOpenOption.TRUNCATE_EXISTING);
         return configFile;
+    }
+
+    protected static String jsonEscape(String value) {
+        return value.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 
     @Override

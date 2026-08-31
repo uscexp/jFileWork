@@ -62,12 +62,39 @@ mvn test -Dgroups="ui"
 
 ## Configuration
 
-The application is configured via `config/app-config.json` (created on first run with defaults).
+The application is configured via `config/app-config.json`.
 
-Example — add a custom toolbar button that calls 7-Zip:
+### Security for external commands
+
+`os.exec` is disabled by default. To enable it, add a `security` section with an explicit allow-list:
 
 ```json
 {
+  "security": {
+    "allowOsCommands": true,
+    "allowedExecutables": [
+      "C:/Program Files/7-Zip/7z.exe",
+      "C:/Program Files/Notepad++/notepad++.exe",
+      "C:/Program Files/Git/bin/bash.exe"
+    ],
+    "allowedRoots": [
+      "C:/Users/andreas.eisenhauer"
+    ]
+  }
+}
+```
+
+### Example actions
+
+Toolbar button that calls 7-Zip:
+
+```json
+{
+  "security": {
+    "allowOsCommands": true,
+    "allowedExecutables": ["C:/Program Files/7-Zip/7z.exe"],
+    "allowedRoots": ["C:/Users/andreas.eisenhauer"]
+  },
   "actions": [
     {
       "id": "zipWith7z",
@@ -75,7 +102,53 @@ Example — add a custom toolbar button that calls 7-Zip:
       "commandId": "os.exec",
       "params": {
         "exe": "C:/Program Files/7-Zip/7z.exe",
-        "args": "a ${activePane.path}/archive.7z ${selection.paths}"
+        "args": "a archive.7z ${selection.paths}"
+      },
+      "placement": ["menu.tools"]
+    }
+  ]
+}
+```
+
+Open the selected file in Notepad++:
+
+```json
+{
+  "security": {
+    "allowOsCommands": true,
+    "allowedExecutables": ["C:/Program Files/Notepad++/notepad++.exe"]
+  },
+  "actions": [
+    {
+      "id": "openInNotepadPlusPlus",
+      "label": "Open in Notepad++",
+      "commandId": "os.exec",
+      "params": {
+        "exe": "C:/Program Files/Notepad++/notepad++.exe",
+        "args": "${selection.paths}"
+      },
+      "placement": ["menu.tools", "toolbar.main"]
+    }
+  ]
+}
+```
+
+Run a Git Bash command inside the active pane:
+
+```json
+{
+  "security": {
+    "allowOsCommands": true,
+    "allowedExecutables": ["C:/Program Files/Git/bin/bash.exe"]
+  },
+  "actions": [
+    {
+      "id": "gitStatus",
+      "label": "Git Status",
+      "commandId": "os.exec",
+      "params": {
+        "exe": "C:/Program Files/Git/bin/bash.exe",
+        "args": "-lc \"git status\""
       },
       "placement": ["menu.tools"]
     }
@@ -100,7 +173,7 @@ See [`PLUGIN_DEV.md`](PLUGIN_DEV.md) *(available in M5)* for the plugin developm
 | **M1** ✅ | Dual-pane file view, navigation, selection |
 | **M2** ✅ | Built-in commands (F5 Copy, F6 Move, F7 Mkdir, F8 Delete, F2 Rename) |
 | **M3** ✅ | Config-driven toolbar, menus, hotkeys, preferences and session persistence |
-| **M4** | OS-command adapter + security rules |
+| **M4** ✅ | OS-command adapter + pragmatic security rules |
 | **M5** | Plugin system (ServiceLoader, demo plugin) |
 | **M6** | Polishing, tabs, drag & drop, native packaging |
 

@@ -94,7 +94,8 @@ class BuiltinCommandsTest {
                 inactiveDir,
                 new SelectionSnapshot(selectedPaths),
                 new CancellationToken(),
-                ProgressSink.NO_OP
+                ProgressSink.NO_OP,
+                ProcessOutputSink.NO_OP
         );
     }
 }

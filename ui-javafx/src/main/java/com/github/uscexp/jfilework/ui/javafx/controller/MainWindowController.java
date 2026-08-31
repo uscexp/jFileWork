@@ -6,17 +6,24 @@ import com.github.uscexp.jfilework.core.command.CommandContext;
 import com.github.uscexp.jfilework.core.command.CommandExecutor;
 import com.github.uscexp.jfilework.core.command.CommandRegistry;
 import com.github.uscexp.jfilework.core.command.CommandResult;
+import com.github.uscexp.jfilework.core.command.CommandStatus;
 import com.github.uscexp.jfilework.core.command.ProgressSink;
+import com.github.uscexp.jfilework.core.command.ProcessOutputSink;
 import com.github.uscexp.jfilework.core.command.SelectionSnapshot;
 import com.github.uscexp.jfilework.core.command.builtin.CopyCommand;
 import com.github.uscexp.jfilework.core.command.builtin.DeleteCommand;
 import com.github.uscexp.jfilework.core.command.builtin.MkdirCommand;
 import com.github.uscexp.jfilework.core.command.builtin.MoveCommand;
+import com.github.uscexp.jfilework.core.command.builtin.OsExecCommand;
 import com.github.uscexp.jfilework.core.command.builtin.RenameCommand;
 import com.github.uscexp.jfilework.core.config.AppConfig;
 import com.github.uscexp.jfilework.core.config.ConfigService;
+import com.github.uscexp.jfilework.core.config.SecurityConfig;
 import com.github.uscexp.jfilework.core.fs.FileService;
 import com.github.uscexp.jfilework.core.fs.LocalFileService;
+import com.github.uscexp.jfilework.core.security.CommandPolicy;
+import com.github.uscexp.jfilework.core.security.ParamSanitizer;
+import com.github.uscexp.jfilework.core.security.PathPolicy;
 import com.github.uscexp.jfilework.ui.javafx.action.CommandExecutionHandler;
 import com.github.uscexp.jfilework.ui.javafx.action.ConfiguredAction;
 import com.github.uscexp.jfilework.ui.javafx.action.KeyBindingService;
@@ -37,7 +44,6 @@ import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
-import javafx.scene.control.MenuBar;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.ToolBar;
@@ -62,7 +68,6 @@ public class MainWindowController {
 
     private static final Logger log = LoggerFactory.getLogger(MainWindowController.class);
 
-    @FXML private MenuBar menuBar;
     @FXML private Menu fileMenu;
     @FXML private Menu toolsMenu;
     @FXML private ToolBar toolBar;
@@ -94,8 +99,8 @@ public class MainWindowController {
     @FXML
     public void initialize() {
         statusBarController.bind(statusLabel);
-        registerBuiltInCommands();
         appConfig = configService.load();
+        registerBuiltInCommands(appConfig.security());
         loadedSession = sessionService.load().orElse(null);
 
         try {
@@ -128,7 +133,7 @@ public class MainWindowController {
             statusBarController.showMessage("Cannot initialize UI: " + e.getMessage());
         }
 
-        splitPane.sceneProperty().addListener((obs, oldScene, newScene) -> {
+        splitPane.sceneProperty().addListener((ignoredObs, ignoredOldScene, newScene) -> {
             if (newScene != null) {
                 if (!keyBindingsInstalled) {
                     keyBindingService.bind(newScene, configuredActions, this::executeConfiguredCommand);
@@ -136,7 +141,7 @@ public class MainWindowController {
                 }
                 if (newScene.getWindow() instanceof Stage stage) {
                     applySessionToStage(stage);
-                    stage.setOnCloseRequest(event -> saveSession(stage));
+                    stage.setOnCloseRequest(ignoredEvent -> saveSession(stage));
                 }
             }
         });
@@ -195,7 +200,7 @@ public class MainWindowController {
             return;
         }
 
-        appConfig = new AppConfig(maybeUpdated.get(), appConfig.actions());
+        appConfig = new AppConfig(maybeUpdated.get(), appConfig.actions(), appConfig.security());
         try {
             configService.save(configService.resolveConfigPath(), appConfig);
             statusBarController.showMessage("Preferences saved to " + configService.resolveConfigPath());
@@ -218,12 +223,18 @@ public class MainWindowController {
         alert.showAndWait();
     }
 
-    private void registerBuiltInCommands() {
+    private void registerBuiltInCommands(SecurityConfig securityConfig) {
+        SecurityConfig effectiveSecurity = securityConfig == null ? SecurityConfig.defaults() : securityConfig;
         commandRegistry.register(new CopyCommand());
         commandRegistry.register(new MoveCommand());
         commandRegistry.register(new MkdirCommand());
         commandRegistry.register(new DeleteCommand());
         commandRegistry.register(new RenameCommand());
+        commandRegistry.register(new OsExecCommand(
+                new CommandPolicy(effectiveSecurity.allowOsCommands(), effectiveSecurity.allowedExecutables()),
+                new PathPolicy(effectiveSecurity.allowedRoots()),
+                new ParamSanitizer()
+        ));
     }
 
     private void executeConfiguredCommand(String commandId, Map<String, String> params, String actionLabel) {
@@ -254,9 +265,13 @@ public class MainWindowController {
         }
 
         Stage owner = statusLabel.getScene() == null ? null : (Stage) statusLabel.getScene().getWindow();
-        ProgressDialogController progressDialog = owner == null
-                ? null
-                : new ProgressDialogController(owner, context.cancellationToken(), "Running: " + commandId);
+        boolean externalProcessCommand = "os.exec".equals(commandId);
+        ProgressDialogController progressDialog = !externalProcessCommand && owner != null
+                ? new ProgressDialogController(owner, context.cancellationToken(), "Running: " + commandId)
+                : null;
+        ProcessOutputController processOutputController = externalProcessCommand && owner != null
+                ? new ProcessOutputController(owner, context.cancellationToken(), "Process Output: " + actionLabel)
+                : null;
 
         if (progressDialog != null) {
             progressDialog.show();
@@ -275,6 +290,35 @@ public class MainWindowController {
                             progressDialog.setMessage(label + " " + completedWork + "/" + totalWork);
                         }
                     }
+                },
+                new ProcessOutputSink() {
+                    @Override
+                    public void onProcessStarted(Process process) {
+                        if (processOutputController != null) {
+                            processOutputController.bindProcess(process);
+                        }
+                    }
+
+                    @Override
+                    public void onStdOut(String line) {
+                        if (processOutputController != null) {
+                            processOutputController.appendStdOut(line);
+                        }
+                    }
+
+                    @Override
+                    public void onStdErr(String line) {
+                        if (processOutputController != null) {
+                            processOutputController.appendStdErr(line);
+                        }
+                    }
+
+                    @Override
+                    public void onFinished(int exitCode) {
+                        if (processOutputController != null) {
+                            processOutputController.markFinished(exitCode);
+                        }
+                    }
                 }
         );
 
@@ -283,9 +327,16 @@ public class MainWindowController {
             if (progressDialog != null) {
                 progressDialog.close();
             }
+            if (processOutputController != null && processOutputController.hasProcess() && result.status() == CommandStatus.FAILED) {
+                processOutputController.markFailed(result.message());
+            }
             leftPaneController.refreshCurrentDirectoryView();
             rightPaneController.refreshCurrentDirectoryView();
             statusBarController.showMessage(result.message());
+            if (result.status() == CommandStatus.FAILED) {
+                log.warn("Command '{}' failed: {}", commandId, result.message());
+                showErrorDialog(actionLabel, result.message());
+            }
         }));
     }
 
@@ -373,7 +424,8 @@ public class MainWindowController {
                 inactivePath,
                 new SelectionSnapshot(selection),
                 new CancellationToken(),
-                ProgressSink.NO_OP
+                ProgressSink.NO_OP,
+                ProcessOutputSink.NO_OP
         );
     }
 
@@ -384,7 +436,7 @@ public class MainWindowController {
         controller.configure(paneId, title, fileService, this::updateStatus);
 
         target.getChildren().setAll(paneRoot);
-        target.focusedProperty().addListener((obs, oldV, focused) -> {
+        target.focusedProperty().addListener((ignoredObs, ignoredOldValue, focused) -> {
             if (focused) {
                 activePaneTracker.setActivePane("left".equals(paneId)
                         ? ActivePaneTracker.PaneSide.LEFT
@@ -394,7 +446,7 @@ public class MainWindowController {
         });
 
         Node table = controller.getFileTable();
-        table.focusedProperty().addListener((obs, oldV, focused) -> {
+        table.focusedProperty().addListener((ignoredObs, ignoredOldValue, focused) -> {
             if (focused) {
                 activePaneTracker.setActivePane("left".equals(paneId)
                         ? ActivePaneTracker.PaneSide.LEFT
@@ -444,9 +496,18 @@ public class MainWindowController {
         }
         if (config.ui() == null) {
             return new AppConfig(com.github.uscexp.jfilework.core.config.UiConfig.defaults(),
-                    config.actions() == null ? List.of() : config.actions());
+                    config.actions() == null ? List.of() : config.actions(),
+                    config.security() == null ? SecurityConfig.defaults() : config.security());
         }
         return config;
+    }
+
+    private void showErrorDialog(String actionLabel, String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(actionLabel + " failed");
+        alert.setHeaderText(actionLabel + " could not be completed");
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
     private void applySessionToStage(Stage stage) {

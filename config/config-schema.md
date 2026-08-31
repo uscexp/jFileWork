@@ -5,6 +5,7 @@
 | Feld | Typ | Pflicht | Beschreibung |
 |---|---|---|---|
 | `ui` | Objekt | nein | UI-Basisoptionen |
+| `security` | Objekt | nein | Pragmatische Sicherheitsregeln fuer `os.exec` |
 | `actions` | Array | nein | Konfigurierbare Actions fuer Menues, Toolbar und Hotkeys |
 
 ## `ui`
@@ -15,6 +16,14 @@
 | `showHiddenFiles` | Boolean | nein | versteckte Dateien ein/aus (wird in M6 verdrahtet) |
 | `leftStartPath` | String | nein | Startpfad linke Pane |
 | `rightStartPath` | String | nein | Startpfad rechte Pane |
+
+## `security`
+
+| Feld | Typ | Pflicht | Beschreibung |
+|---|---|---|---|
+| `allowOsCommands` | Boolean | nein | Aktiviert/deaktiviert `os.exec` global |
+| `allowedExecutables` | Array[String] | nein | Absolute Pfade auf explizit erlaubte Programme |
+| `allowedRoots` | Array[String] | nein | Optionale erlaubte Wurzelpfade fuer aktive/inaktive/selektierte Dateien |
 
 ## `actions[]`
 
@@ -33,4 +42,11 @@
 - `${inactivePane.path}`
 - `${selection.paths}` (space-separiert)
 - `${prompt:Frage}` (zeigt Eingabedialog zur Laufzeit)
+
+## `os.exec` Parameter
+
+| Feld | Typ | Pflicht | Beschreibung |
+|---|---|---|---|
+| `exe` | String | ja | Absoluter Pfad des auszufuehrenden Programms |
+| `args` | String | nein | Argument-Zeichenkette; wird ohne Shell tokenisiert |
 
