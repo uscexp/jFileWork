@@ -28,6 +28,7 @@ It is a local desktop application — no server, no network stack.
 ```
 jFileWork/                  ← parent POM (packaging=pom)
 ├── plugin-api/             ← jfilework-plugin-api   — stable public API for plugins
+├── sample-hash-plugin/     ← jfilework-sample-hash-plugin — demo plugin for M5
 ├── core/                   ← jfilework-core          — file system, commands, config, security
 └── ui-javafx/              ← jfilework-ui-javafx     — JavaFX UI (runnable module)
 ```
@@ -173,11 +174,11 @@ Toolbar buttons, menu items and hotkeys are **not hard-coded** — they are load
 | Milestone | Status |
 |-----------|--------|
 | M0 — Setup, Maven modules, JavaFX skeleton, TestFX | ✅ Done |
-| M1 — Dual-pane file view, navigation, selection | ⬜ Next |
-| M2 — Built-in commands (F5–F8, F2) | ⬜ Planned |
-| M3 — Config-driven toolbar / menus / hotkeys | ⬜ Planned |
-| M4 — OS-command adapter + security | ⬜ Planned |
-| M5 — Plugin system + demo plugin | ⬜ Planned |
+| M1 — Dual-pane file view, navigation, selection | ✅ Done |
+| M2 — Built-in commands (F5–F8, F2) | ✅ Done |
+| M3 — Config-driven toolbar / menus / hotkeys | ✅ Done |
+| M4 — OS-command adapter + security | ✅ Done |
+| M5 — Plugin system + demo plugin | ✅ Done |
 | M6 — Polishing, packaging, coverage | ⬜ Planned |
 
 Full milestone details: see [`PLAN.md`](PLAN.md).

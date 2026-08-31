@@ -8,11 +8,12 @@ import java.util.List;
 public record AppConfig(
         UiConfig ui,
         List<ActionConfig> actions,
-        SecurityConfig security
+        SecurityConfig security,
+        PluginConfig plugins
 ) {
 
     public static AppConfig defaults() {
-        return new AppConfig(UiConfig.defaults(), List.of(), SecurityConfig.defaults());
+        return new AppConfig(UiConfig.defaults(), List.of(), SecurityConfig.defaults(), PluginConfig.defaults());
     }
 }
 

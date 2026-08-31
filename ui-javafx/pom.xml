@@ -58,6 +58,11 @@
             <groupId>org.testfx</groupId>
             <artifactId>openjfx-monocle</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.github.uscexp</groupId>
+            <artifactId>jfilework-sample-hash-plugin</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

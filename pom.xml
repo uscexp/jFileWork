@@ -12,6 +12,7 @@
 
     <modules>
         <module>plugin-api</module>
+        <module>sample-hash-plugin</module>
         <module>core</module>
         <module>ui-javafx</module>
     </modules>
@@ -48,6 +49,11 @@
             <dependency>
                 <groupId>com.github.uscexp</groupId>
                 <artifactId>jfilework-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.uscexp</groupId>
+                <artifactId>jfilework-sample-hash-plugin</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

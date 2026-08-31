@@ -42,6 +42,11 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.github.uscexp</groupId>
+            <artifactId>jfilework-sample-hash-plugin</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>
 

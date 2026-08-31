@@ -80,6 +80,15 @@ public class ConfigService {
         }
 
         UiConfig ui = rawConfig.ui() == null ? UiConfig.defaults() : rawConfig.ui();
+        PluginConfig plugins = rawConfig.plugins() == null ? PluginConfig.defaults() : new PluginConfig(
+                rawConfig.plugins().directory() == null || rawConfig.plugins().directory().isBlank()
+                        ? PluginConfig.defaults().directory()
+                        : rawConfig.plugins().directory().trim(),
+                rawConfig.plugins().enabled() == null ? List.of() : rawConfig.plugins().enabled().stream()
+                        .filter(value -> value != null && !value.isBlank())
+                        .map(String::trim)
+                        .toList()
+        );
         SecurityConfig security = rawConfig.security() == null ? SecurityConfig.defaults() : new SecurityConfig(
                 rawConfig.security().allowOsCommands(),
                 rawConfig.security().allowedExecutables() == null ? List.of() : rawConfig.security().allowedExecutables().stream()
@@ -106,7 +115,7 @@ public class ConfigService {
                 ))
                 .toList();
 
-        return new AppConfig(ui, actions, security);
+        return new AppConfig(ui, actions, security, plugins);
     }
 }
 

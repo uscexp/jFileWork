@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeAll;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 
 /**
@@ -51,6 +52,33 @@ public abstract class MainWindowUiTestBase extends FxTestBase {
 
     protected static String jsonEscape(String value) {
         return value.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
+    protected static Path materializePluginDirectory(Path sourceDirectory, String name) throws IOException {
+        Path pluginRoot = Files.createTempDirectory("jfilework-plugin-root-");
+        if (Files.isDirectory(sourceDirectory)) {
+            Path targetDirectory = pluginRoot.resolve(name);
+            copyDirectory(sourceDirectory, targetDirectory);
+        } else {
+            Path targetJar = pluginRoot.resolve(name + ".jar");
+            Files.copy(sourceDirectory, targetJar, StandardCopyOption.REPLACE_EXISTING);
+        }
+        return pluginRoot;
+    }
+
+    private static void copyDirectory(Path source, Path target) throws IOException {
+        try (var stream = Files.walk(source)) {
+            for (Path current : stream.toList()) {
+                Path relative = source.relativize(current);
+                Path destination = target.resolve(relative.toString());
+                if (Files.isDirectory(current)) {
+                    Files.createDirectories(destination);
+                } else {
+                    Files.createDirectories(destination.getParent());
+                    Files.copy(current, destination, StandardCopyOption.REPLACE_EXISTING);
+                }
+            }
+        }
     }
 
     @Override

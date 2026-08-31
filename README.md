@@ -10,6 +10,7 @@ Built with **Java 26** and **JavaFX 23**, featuring a fully configuration-driven
 ```
 jFileWork/               ← Parent POM (multi-module)
 ├── plugin-api/          ← Stable public API for external plugins
+├── sample-hash-plugin/  ← Demo plugin contributing SHA-256 commands
 ├── core/                ← File system logic, command engine, config, security
 └── ui-javafx/           ← JavaFX dual-pane UI (this is the runnable module)
 ```
@@ -160,8 +161,31 @@ Run a Git Bash command inside the active pane:
 
 ## Plugins
 
-Drop plugin JARs into the `plugins/` folder. They are discovered automatically via `ServiceLoader`.  
-See [`PLUGIN_DEV.md`](PLUGIN_DEV.md) *(available in M5)* for the plugin development guide.
+Plugins are discovered via `ServiceLoader<CommandPlugin>`.
+
+Minimal plugin configuration:
+
+```json
+{
+  "plugins": {
+    "directory": "plugins",
+    "enabled": ["sample-hash-plugin"]
+  },
+  "actions": [
+    {
+      "id": "hashSelection",
+      "label": "Hash Selection",
+      "commandId": "plugin.hash.sha256",
+      "params": {},
+      "placement": ["toolbar.main", "menu.tools"]
+    }
+  ]
+}
+```
+
+For development and tests, the plugin loader also accepts subdirectories that contain compiled classes plus `META-INF/services`.
+
+See [`PLUGIN_DEV.md`](PLUGIN_DEV.md) for the plugin development guide.
 
 ---
 
@@ -174,6 +198,6 @@ See [`PLUGIN_DEV.md`](PLUGIN_DEV.md) *(available in M5)* for the plugin developm
 | **M2** ✅ | Built-in commands (F5 Copy, F6 Move, F7 Mkdir, F8 Delete, F2 Rename) |
 | **M3** ✅ | Config-driven toolbar, menus, hotkeys, preferences and session persistence |
 | **M4** ✅ | OS-command adapter + pragmatic security rules |
-| **M5** | Plugin system (ServiceLoader, demo plugin) |
+| **M5** ✅ | Plugin system (ServiceLoader, isolated loader, demo plugin) |
 | **M6** | Polishing, tabs, drag & drop, native packaging |
 

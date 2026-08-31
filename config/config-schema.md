@@ -1,4 +1,4 @@
-# app-config.json Schema (M3)
+# app-config.json Schema (M5)
 
 ## Root
 
@@ -6,6 +6,7 @@
 |---|---|---|---|
 | `ui` | Objekt | nein | UI-Basisoptionen |
 | `security` | Objekt | nein | Pragmatische Sicherheitsregeln fuer `os.exec` |
+| `plugins` | Objekt | nein | Plugin-Discovery und Aktivierung |
 | `actions` | Array | nein | Konfigurierbare Actions fuer Menues, Toolbar und Hotkeys |
 
 ## `ui`
@@ -24,6 +25,13 @@
 | `allowOsCommands` | Boolean | nein | Aktiviert/deaktiviert `os.exec` global |
 | `allowedExecutables` | Array[String] | nein | Absolute Pfade auf explizit erlaubte Programme |
 | `allowedRoots` | Array[String] | nein | Optionale erlaubte Wurzelpfade fuer aktive/inaktive/selektierte Dateien |
+
+## `plugins`
+
+| Feld | Typ | Pflicht | Beschreibung |
+|---|---|---|---|
+| `directory` | String | nein | Plugin-Ordner; enthaelt JARs oder Entwicklungs-Unterordner mit `META-INF/services` |
+| `enabled` | Array[String] | nein | Liste aktivierter Plugin-IDs; leer = alles laden |
 
 ## `actions[]`
 
@@ -49,4 +57,5 @@
 |---|---|---|---|
 | `exe` | String | ja | Absoluter Pfad des auszufuehrenden Programms |
 | `args` | String | nein | Argument-Zeichenkette; wird ohne Shell tokenisiert |
+
 

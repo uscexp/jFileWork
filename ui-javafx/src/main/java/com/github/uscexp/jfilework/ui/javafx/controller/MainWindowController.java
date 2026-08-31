@@ -18,9 +18,12 @@ import com.github.uscexp.jfilework.core.command.builtin.OsExecCommand;
 import com.github.uscexp.jfilework.core.command.builtin.RenameCommand;
 import com.github.uscexp.jfilework.core.config.AppConfig;
 import com.github.uscexp.jfilework.core.config.ConfigService;
+import com.github.uscexp.jfilework.core.config.PluginConfig;
 import com.github.uscexp.jfilework.core.config.SecurityConfig;
 import com.github.uscexp.jfilework.core.fs.FileService;
 import com.github.uscexp.jfilework.core.fs.LocalFileService;
+import com.github.uscexp.jfilework.core.plugin.PluginManager;
+import com.github.uscexp.jfilework.core.plugin.PluginRuntimeInfo;
 import com.github.uscexp.jfilework.core.security.CommandPolicy;
 import com.github.uscexp.jfilework.core.security.ParamSanitizer;
 import com.github.uscexp.jfilework.core.security.PathPolicy;
@@ -67,6 +70,7 @@ import java.util.concurrent.CompletableFuture;
 public class MainWindowController {
 
     private static final Logger log = LoggerFactory.getLogger(MainWindowController.class);
+    private static final String APPLICATION_VERSION = "0.0.1-Alpha-SNAPSHOT";
 
     @FXML private Menu fileMenu;
     @FXML private Menu toolsMenu;
@@ -87,11 +91,15 @@ public class MainWindowController {
     private final ToolbarBuilder toolbarBuilder = new ToolbarBuilder();
     private final MenuBuilder menuBuilder = new MenuBuilder();
     private final PreferencesController preferencesController = new PreferencesController();
+    private final PluginSettingsController pluginSettingsController = new PluginSettingsController();
+    private final CommandResultDialogController commandResultDialogController = new CommandResultDialogController();
     private final SessionService sessionService = new SessionService();
+    private final PluginManager pluginManager = new PluginManager(commandRegistry);
 
     private FilePaneController leftPaneController;
     private FilePaneController rightPaneController;
     private List<ConfiguredAction> configuredActions = List.of();
+    private List<PluginRuntimeInfo> pluginRuntimeInfos = List.of();
     private boolean keyBindingsInstalled;
     private AppConfig appConfig = AppConfig.defaults();
     private SessionState loadedSession;
@@ -101,6 +109,7 @@ public class MainWindowController {
         statusBarController.bind(statusLabel);
         appConfig = configService.load();
         registerBuiltInCommands(appConfig.security());
+        pluginRuntimeInfos = pluginManager.loadPlugins(appConfig.plugins(), APPLICATION_VERSION);
         loadedSession = sessionService.load().orElse(null);
 
         try {
@@ -162,6 +171,7 @@ public class MainWindowController {
         if (rightPaneController != null) {
             rightPaneController.stopWatching();
         }
+        pluginManager.close();
         commandExecutor.close();
         Platform.exit();
     }
@@ -186,7 +196,7 @@ public class MainWindowController {
     @FXML
     private void onPreferences() {
         Stage owner = statusLabel.getScene() == null ? null : (Stage) statusLabel.getScene().getWindow();
-        appConfig = ensureNonNullUiConfig(appConfig);
+        appConfig = ensureNonNullConfig(appConfig);
 
         Optional<com.github.uscexp.jfilework.core.config.UiConfig> maybeUpdated = preferencesController.showDialog(
                 owner,
@@ -200,7 +210,7 @@ public class MainWindowController {
             return;
         }
 
-        appConfig = new AppConfig(maybeUpdated.get(), appConfig.actions(), appConfig.security());
+        appConfig = new AppConfig(maybeUpdated.get(), appConfig.actions(), appConfig.security(), appConfig.plugins());
         try {
             configService.save(configService.resolveConfigPath(), appConfig);
             statusBarController.showMessage("Preferences saved to " + configService.resolveConfigPath());
@@ -208,6 +218,12 @@ public class MainWindowController {
             log.warn("Cannot save preferences", exception);
             statusBarController.showMessage("Cannot save preferences: " + exception.getMessage());
         }
+    }
+
+    @FXML
+    private void onPluginSettings() {
+        Stage owner = statusLabel.getScene() == null ? null : (Stage) statusLabel.getScene().getWindow();
+        pluginSettingsController.showDialog(owner, pluginRuntimeInfos);
     }
 
     // -------------------------------------------------------------------------
@@ -336,6 +352,8 @@ public class MainWindowController {
             if (result.status() == CommandStatus.FAILED) {
                 log.warn("Command '{}' failed: {}", commandId, result.message());
                 showErrorDialog(actionLabel, result.message());
+            } else if (commandId.startsWith("plugin.")) {
+                showInfoDialog(owner, actionLabel, result.message());
             }
         }));
     }
@@ -490,14 +508,23 @@ public class MainWindowController {
         statusBarController.showMessage(message);
     }
 
-    private static AppConfig ensureNonNullUiConfig(AppConfig config) {
+    private static AppConfig ensureNonNullConfig(AppConfig config) {
         if (config == null) {
             return AppConfig.defaults();
         }
         if (config.ui() == null) {
             return new AppConfig(com.github.uscexp.jfilework.core.config.UiConfig.defaults(),
                     config.actions() == null ? List.of() : config.actions(),
-                    config.security() == null ? SecurityConfig.defaults() : config.security());
+                    config.security() == null ? SecurityConfig.defaults() : config.security(),
+                    config.plugins() == null ? PluginConfig.defaults() : config.plugins());
+        }
+        if (config.security() == null || config.plugins() == null) {
+            return new AppConfig(
+                    config.ui(),
+                    config.actions() == null ? List.of() : config.actions(),
+                    config.security() == null ? SecurityConfig.defaults() : config.security(),
+                    config.plugins() == null ? PluginConfig.defaults() : config.plugins()
+            );
         }
         return config;
     }
@@ -508,6 +535,10 @@ public class MainWindowController {
         alert.setHeaderText(actionLabel + " could not be completed");
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    private void showInfoDialog(Stage owner, String actionLabel, String message) {
+        commandResultDialogController.showDialog(owner, actionLabel + " completed", message);
     }
 
     private void applySessionToStage(Stage stage) {

@@ -20,6 +20,7 @@
 
                 <Menu text="View">
                     <MenuItem text="Preferences…" onAction="#onPreferences"/>
+                    <MenuItem text="Plugin Settings…" onAction="#onPluginSettings"/>
                 </Menu>
 
                 <!-- Tools menu will be populated dynamically from config in M3 -->
