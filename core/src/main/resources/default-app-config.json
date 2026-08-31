@@ -1,0 +1,59 @@
+{
+  "ui": {
+    "theme": "system",
+    "showHiddenFiles": false,
+    "leftStartPath": "",
+    "rightStartPath": ""
+  },
+  "actions": [
+    {
+      "id": "copyToOtherPane",
+      "label": "Copy",
+      "commandId": "file.copy",
+      "params": {
+        "target": "${inactivePane.path}"
+      },
+      "shortcut": "F5",
+      "placement": ["toolbar.main", "menu.file"]
+    },
+    {
+      "id": "moveToOtherPane",
+      "label": "Move",
+      "commandId": "file.move",
+      "params": {
+        "target": "${inactivePane.path}"
+      },
+      "shortcut": "F6",
+      "placement": ["toolbar.main", "menu.file"]
+    },
+    {
+      "id": "makeDirectory",
+      "label": "Create Folder",
+      "commandId": "file.mkdir",
+      "params": {
+        "name": "${prompt:Folder name}"
+      },
+      "shortcut": "F7",
+      "placement": ["toolbar.main", "menu.file"]
+    },
+    {
+      "id": "deleteSelection",
+      "label": "Delete",
+      "commandId": "file.delete",
+      "params": {},
+      "shortcut": "F8",
+      "placement": ["toolbar.main", "menu.file"]
+    },
+    {
+      "id": "renameSelection",
+      "label": "Rename",
+      "commandId": "file.rename",
+      "params": {
+        "name": "${prompt:New name}"
+      },
+      "shortcut": "F2",
+      "placement": ["menu.file"]
+    }
+  ]
+}
+

@@ -13,8 +13,19 @@ import com.github.uscexp.jfilework.core.command.builtin.DeleteCommand;
 import com.github.uscexp.jfilework.core.command.builtin.MkdirCommand;
 import com.github.uscexp.jfilework.core.command.builtin.MoveCommand;
 import com.github.uscexp.jfilework.core.command.builtin.RenameCommand;
+import com.github.uscexp.jfilework.core.config.AppConfig;
+import com.github.uscexp.jfilework.core.config.ConfigService;
 import com.github.uscexp.jfilework.core.fs.FileService;
 import com.github.uscexp.jfilework.core.fs.LocalFileService;
+import com.github.uscexp.jfilework.ui.javafx.action.CommandExecutionHandler;
+import com.github.uscexp.jfilework.ui.javafx.action.ConfiguredAction;
+import com.github.uscexp.jfilework.ui.javafx.action.KeyBindingService;
+import com.github.uscexp.jfilework.ui.javafx.action.MenuBuilder;
+import com.github.uscexp.jfilework.ui.javafx.action.ParamTemplateEngine;
+import com.github.uscexp.jfilework.ui.javafx.action.ToolbarBuilder;
+import com.github.uscexp.jfilework.ui.javafx.action.UiActionMapper;
+import com.github.uscexp.jfilework.ui.javafx.session.SessionService;
+import com.github.uscexp.jfilework.ui.javafx.session.SessionState;
 import com.github.uscexp.jfilework.ui.javafx.model.ActivePaneTracker;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -25,12 +36,11 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.ToolBar;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
@@ -39,6 +49,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -52,6 +63,8 @@ public class MainWindowController {
     private static final Logger log = LoggerFactory.getLogger(MainWindowController.class);
 
     @FXML private MenuBar menuBar;
+    @FXML private Menu fileMenu;
+    @FXML private Menu toolsMenu;
     @FXML private ToolBar toolBar;
     @FXML private SplitPane splitPane;
     @FXML private VBox leftPane;
@@ -63,24 +76,50 @@ public class MainWindowController {
     private final CommandRegistry commandRegistry = new CommandRegistry();
     private final CommandExecutor commandExecutor = new CommandExecutor();
     private final StatusBarController statusBarController = new StatusBarController();
+    private final ConfigService configService = new ConfigService();
+    private final ParamTemplateEngine paramTemplateEngine = new ParamTemplateEngine();
+    private final KeyBindingService keyBindingService = new KeyBindingService();
+    private final ToolbarBuilder toolbarBuilder = new ToolbarBuilder();
+    private final MenuBuilder menuBuilder = new MenuBuilder();
+    private final PreferencesController preferencesController = new PreferencesController();
+    private final SessionService sessionService = new SessionService();
 
     private FilePaneController leftPaneController;
     private FilePaneController rightPaneController;
+    private List<ConfiguredAction> configuredActions = List.of();
+    private boolean keyBindingsInstalled;
+    private AppConfig appConfig = AppConfig.defaults();
+    private SessionState loadedSession;
 
     @FXML
     public void initialize() {
         statusBarController.bind(statusLabel);
         registerBuiltInCommands();
+        appConfig = configService.load();
+        loadedSession = sessionService.load().orElse(null);
 
         try {
             leftPaneController = mountFilePane(leftPane, "left", "Left pane");
             rightPaneController = mountFilePane(rightPane, "right", "Right pane");
 
-            Path leftStartPath = resolveStartPath("jfilework.leftStartPath");
-            Path rightStartPath = resolveStartPath("jfilework.rightStartPath");
+            Path leftStartPath = resolveStartPath(
+                    "jfilework.leftStartPath",
+                    appConfig.ui().leftStartPath(),
+                    loadedSession == null ? null : loadedSession.leftPath()
+            );
+            Path rightStartPath = resolveStartPath(
+                    "jfilework.rightStartPath",
+                    appConfig.ui().rightStartPath(),
+                    loadedSession == null ? null : loadedSession.rightPath()
+            );
 
             leftPaneController.navigateTo(leftStartPath);
             rightPaneController.navigateTo(rightStartPath);
+
+            configuredActions = new UiActionMapper(commandRegistry).map(appConfig);
+            CommandExecutionHandler handler = this::executeConfiguredCommand;
+            toolbarBuilder.build(toolBar, configuredActions, handler);
+            menuBuilder.build(fileMenu, toolsMenu, configuredActions, handler);
 
             statusBarController.showMessage("Ready");
             log.info("Main window initialised with left={} and right={}", leftStartPath, rightStartPath);
@@ -91,7 +130,14 @@ public class MainWindowController {
 
         splitPane.sceneProperty().addListener((obs, oldScene, newScene) -> {
             if (newScene != null) {
-                newScene.addEventFilter(KeyEvent.KEY_PRESSED, this::onGlobalKeyPressed);
+                if (!keyBindingsInstalled) {
+                    keyBindingService.bind(newScene, configuredActions, this::executeConfiguredCommand);
+                    keyBindingsInstalled = true;
+                }
+                if (newScene.getWindow() instanceof Stage stage) {
+                    applySessionToStage(stage);
+                    stage.setOnCloseRequest(event -> saveSession(stage));
+                }
             }
         });
     }
@@ -102,6 +148,9 @@ public class MainWindowController {
 
     @FXML
     private void onExit() {
+        if (statusLabel.getScene() != null && statusLabel.getScene().getWindow() instanceof Stage stage) {
+            saveSession(stage);
+        }
         if (leftPaneController != null) {
             leftPaneController.stopWatching();
         }
@@ -112,28 +161,7 @@ public class MainWindowController {
         Platform.exit();
     }
 
-    @FXML
-    private void onCopy() {
-        executeCommand("file.copy", Map.of());
-    }
-
-    @FXML
-    private void onMove() {
-        executeCommand("file.move", Map.of());
-    }
-
-    @FXML
-    private void onMkdir() {
-        TextInputDialog dialog = new TextInputDialog();
-        dialog.setTitle("Create Folder");
-        dialog.setHeaderText("Create folder in active pane");
-        dialog.setContentText("Folder name:");
-        Optional<String> value = dialog.showAndWait();
-        value.ifPresent(name -> executeCommand("file.mkdir", Map.of("name", name)));
-    }
-
-    @FXML
-    private void onDelete() {
+    private boolean confirmDelete() {
         ButtonType deleteButton = new ButtonType("Delete", ButtonBar.ButtonData.OK_DONE);
         ButtonType cancelButton = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
@@ -143,21 +171,7 @@ public class MainWindowController {
         alert.setTitle("Delete");
         alert.setHeaderText("Confirm delete");
         Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get().getButtonData() == ButtonBar.ButtonData.OK_DONE) {
-            executeCommand("file.delete", Map.of());
-        } else {
-            statusBarController.showMessage("Delete cancelled.");
-        }
-    }
-
-    @FXML
-    private void onRename() {
-        TextInputDialog dialog = new TextInputDialog();
-        dialog.setTitle("Rename");
-        dialog.setHeaderText("Rename selected file/folder");
-        dialog.setContentText("New name:");
-        Optional<String> value = dialog.showAndWait();
-        value.ifPresent(name -> executeCommand("file.rename", Map.of("name", name)));
+        return result.isPresent() && result.get().getButtonData() == ButtonBar.ButtonData.OK_DONE;
     }
 
     // -------------------------------------------------------------------------
@@ -166,7 +180,29 @@ public class MainWindowController {
 
     @FXML
     private void onPreferences() {
-        statusBarController.showMessage("Preferences are available in M3");
+        Stage owner = statusLabel.getScene() == null ? null : (Stage) statusLabel.getScene().getWindow();
+        appConfig = ensureNonNullUiConfig(appConfig);
+
+        Optional<com.github.uscexp.jfilework.core.config.UiConfig> maybeUpdated = preferencesController.showDialog(
+                owner,
+                appConfig.ui(),
+                leftPaneController == null || leftPaneController.getCurrentPath() == null ? "" : leftPaneController.getCurrentPath().toString(),
+                rightPaneController == null || rightPaneController.getCurrentPath() == null ? "" : rightPaneController.getCurrentPath().toString()
+        );
+
+        if (maybeUpdated.isEmpty()) {
+            statusBarController.showMessage("Preferences unchanged.");
+            return;
+        }
+
+        appConfig = new AppConfig(maybeUpdated.get(), appConfig.actions());
+        try {
+            configService.save(configService.resolveConfigPath(), appConfig);
+            statusBarController.showMessage("Preferences saved to " + configService.resolveConfigPath());
+        } catch (IOException exception) {
+            log.warn("Cannot save preferences", exception);
+            statusBarController.showMessage("Cannot save preferences: " + exception.getMessage());
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -190,26 +226,16 @@ public class MainWindowController {
         commandRegistry.register(new RenameCommand());
     }
 
-    private void onGlobalKeyPressed(KeyEvent event) {
-        if (event.getCode() == KeyCode.F5) {
-            onCopy();
-            event.consume();
-        } else if (event.getCode() == KeyCode.F6) {
-            onMove();
-            event.consume();
-        } else if (event.getCode() == KeyCode.F7) {
-            onMkdir();
-            event.consume();
-        } else if (event.getCode() == KeyCode.F8) {
-            onDelete();
-            event.consume();
-        } else if (event.getCode() == KeyCode.F2) {
-            onRename();
-            event.consume();
+    private void executeConfiguredCommand(String commandId, Map<String, String> params, String actionLabel) {
+        if ("file.delete".equals(commandId) && !confirmDelete()) {
+            statusBarController.showMessage("Delete cancelled.");
+            return;
         }
+
+        executeCommand(commandId, params, actionLabel);
     }
 
-    private void executeCommand(String commandId, Map<String, String> params) {
+    private void executeCommand(String commandId, Map<String, String> params, String actionLabel) {
         Optional<Command> optionalCommand = commandRegistry.findById(commandId);
         if (optionalCommand.isEmpty()) {
             statusBarController.showMessage("Unknown command: " + commandId);
@@ -218,6 +244,12 @@ public class MainWindowController {
 
         CommandContext context = buildContext();
         if (context == null) {
+            return;
+        }
+
+        Map<String, String> resolvedParams = resolveActionParameters(params, context, actionLabel);
+        if (resolvedParams == null) {
+            statusBarController.showMessage(actionLabel + " cancelled.");
             return;
         }
 
@@ -246,7 +278,7 @@ public class MainWindowController {
                 }
         );
 
-        CompletableFuture<CommandResult> future = commandExecutor.execute(wrapped, instrumentedContext, params);
+        CompletableFuture<CommandResult> future = commandExecutor.execute(wrapped, instrumentedContext, resolvedParams);
         future.thenAccept(result -> Platform.runLater(() -> {
             if (progressDialog != null) {
                 progressDialog.close();
@@ -288,6 +320,31 @@ public class MainWindowController {
                 return delegate.execute(context, params);
             }
         };
+    }
+
+    private Map<String, String> resolveActionParameters(Map<String, String> params, CommandContext context, String actionLabel) {
+        Map<String, String> resolved = paramTemplateEngine.resolve(params, context);
+        Map<String, String> finalParams = new HashMap<>();
+        for (Map.Entry<String, String> entry : resolved.entrySet()) {
+            String value = entry.getValue();
+            if (value != null && value.startsWith("${prompt:") && value.endsWith("}")) {
+                String question = value.substring("${prompt:".length(), value.length() - 1).trim();
+                String promptLabel = question.isBlank() ? entry.getKey() : question;
+
+                TextInputDialog dialog = new TextInputDialog();
+                dialog.setTitle(actionLabel);
+                dialog.setHeaderText(actionLabel);
+                dialog.setContentText(promptLabel + ":");
+                Optional<String> userInput = dialog.showAndWait();
+                if (userInput.isEmpty()) {
+                    return null;
+                }
+                finalParams.put(entry.getKey(), userInput.get().trim());
+            } else {
+                finalParams.put(entry.getKey(), value);
+            }
+        }
+        return finalParams;
     }
 
     private CommandContext buildContext() {
@@ -348,7 +405,7 @@ public class MainWindowController {
         return controller;
     }
 
-    private Path resolveStartPath(String propertyKey) {
+    private Path resolveStartPath(String propertyKey, String configuredUiPath, String sessionPath) {
         String configuredPath = System.getProperty(propertyKey);
         if (configuredPath != null && !configuredPath.isBlank()) {
             Path path = Paths.get(configuredPath.trim());
@@ -358,10 +415,75 @@ public class MainWindowController {
             log.warn("Configured start path '{}' is invalid for {}", configuredPath, propertyKey);
         }
 
+        if (sessionPath != null && !sessionPath.isBlank()) {
+            Path path = Paths.get(sessionPath.trim());
+            if (fileService.exists(path) && fileService.isDirectory(path)) {
+                return path;
+            }
+            log.warn("Session start path '{}' is invalid for {}", sessionPath, propertyKey);
+        }
+
+        if (configuredUiPath != null && !configuredUiPath.isBlank()) {
+            Path path = Paths.get(configuredUiPath.trim());
+            if (fileService.exists(path) && fileService.isDirectory(path)) {
+                return path;
+            }
+            log.warn("Configured UI start path '{}' is invalid for {}", configuredUiPath, propertyKey);
+        }
+
         return Paths.get(System.getProperty("user.home"));
     }
 
     private void updateStatus(String message) {
         statusBarController.showMessage(message);
+    }
+
+    private static AppConfig ensureNonNullUiConfig(AppConfig config) {
+        if (config == null) {
+            return AppConfig.defaults();
+        }
+        if (config.ui() == null) {
+            return new AppConfig(com.github.uscexp.jfilework.core.config.UiConfig.defaults(),
+                    config.actions() == null ? List.of() : config.actions());
+        }
+        return config;
+    }
+
+    private void applySessionToStage(Stage stage) {
+        if (loadedSession == null) {
+            return;
+        }
+
+        if (loadedSession.windowWidth() > 200) {
+            stage.setWidth(loadedSession.windowWidth());
+        }
+        if (loadedSession.windowHeight() > 200) {
+            stage.setHeight(loadedSession.windowHeight());
+        }
+        if (loadedSession.windowX() >= 0) {
+            stage.setX(loadedSession.windowX());
+        }
+        if (loadedSession.windowY() >= 0) {
+            stage.setY(loadedSession.windowY());
+        }
+    }
+
+    private void saveSession(Stage stage) {
+        String leftPath = leftPaneController == null || leftPaneController.getCurrentPath() == null
+                ? ""
+                : leftPaneController.getCurrentPath().toString();
+        String rightPath = rightPaneController == null || rightPaneController.getCurrentPath() == null
+                ? ""
+                : rightPaneController.getCurrentPath().toString();
+
+        SessionState sessionState = new SessionState(
+                stage.getX(),
+                stage.getY(),
+                stage.getWidth(),
+                stage.getHeight(),
+                leftPath,
+                rightPath
+        );
+        sessionService.save(sessionState);
     }
 }

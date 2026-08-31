@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeAll;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
 /**
  * Shared setup for M1 main-window UI tests.
@@ -37,6 +38,13 @@ public abstract class MainWindowUiTestBase extends FxTestBase {
     static void cleanupFixture() {
         System.clearProperty("jfilework.leftStartPath");
         System.clearProperty("jfilework.rightStartPath");
+        System.clearProperty("jfilework.config");
+    }
+
+    protected static Path writeConfigFile(String fileName, String content) throws IOException {
+        Path configFile = Files.createTempFile(fileName, ".json");
+        Files.writeString(configFile, content, StandardOpenOption.TRUNCATE_EXISTING);
+        return configFile;
     }
 
     @Override

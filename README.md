@@ -97,9 +97,9 @@ See [`PLUGIN_DEV.md`](PLUGIN_DEV.md) *(available in M5)* for the plugin developm
 | Milestone | Focus |
 |-----------|-------|
 | **M0** ✅ | Project setup, Maven modules, JavaFX skeleton, TestFX |
-| **M1** | Dual-pane file view, navigation, selection |
-| **M2** | Built-in commands (F5 Copy, F6 Move, F7 Mkdir, F8 Delete, F2 Rename) |
-| **M3** | Config-driven toolbar, menus and hotkeys |
+| **M1** ✅ | Dual-pane file view, navigation, selection |
+| **M2** ✅ | Built-in commands (F5 Copy, F6 Move, F7 Mkdir, F8 Delete, F2 Rename) |
+| **M3** ✅ | Config-driven toolbar, menus, hotkeys, preferences and session persistence |
 | **M4** | OS-command adapter + security rules |
 | **M5** | Plugin system (ServiceLoader, demo plugin) |
 | **M6** | Polishing, tabs, drag & drop, native packaging |
