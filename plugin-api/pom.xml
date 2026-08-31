@@ -23,7 +23,7 @@
         <!-- Test -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
+            <artifactId>junit-jupiter-api</artifactId>
         </dependency>
     </dependencies>
 </project>
