@@ -26,6 +26,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.function.Consumer;
 
 /**
@@ -124,6 +125,23 @@ public class FilePaneController {
 
     public TableView<FileItemViewModel> getFileTable() {
         return fileTable;
+    }
+
+    public Path getCurrentPath() {
+        return paneState.getCurrentPath();
+    }
+
+    public List<Path> getSelectedPathsForOperations() {
+        return fileTable.getSelectionModel()
+                .getSelectedItems()
+                .stream()
+                .filter(item -> !item.isParentLink())
+                .map(FileItemViewModel::getPath)
+                .collect(Collectors.toList());
+    }
+
+    public void refreshCurrentDirectoryView() {
+        refreshCurrentDirectory();
     }
 
     @FXML
