@@ -85,7 +85,7 @@ The application is configured via `config/app-config.json`.
       "C:/Program Files/Git/bin/bash.exe"
     ],
     "allowedRoots": [
-      "C:/Users/andreas.eisenhauer"
+      "C:/Users/<username>"
     ]
   }
 }
@@ -100,7 +100,7 @@ Toolbar button that calls 7-Zip:
   "security": {
     "allowOsCommands": true,
     "allowedExecutables": ["C:/Program Files/7-Zip/7z.exe"],
-    "allowedRoots": ["C:/Users/andreas.eisenhauer"]
+    "allowedRoots": ["C:/Users/<username>"]
   },
   "actions": [
     {
@@ -243,4 +243,4 @@ Current documented screenshot:
 | **M3** ✅ | Config-driven toolbar, menus, hotkeys, preferences and session persistence |
 | **M4** ✅ | OS-command adapter + pragmatic security rules |
 | **M5** ✅ | Plugin system (ServiceLoader, isolated loader, demo plugin) |
-| **M6** 🚧 | Polishing, tabs, drag & drop, native packaging, docs (6.1-6.5, 6.7-6.12 done; 6.6 open) |
+| **M6** ✅ | Polishing, tabs, drag & drop, native packaging, docs (6.1-6.12 done) |

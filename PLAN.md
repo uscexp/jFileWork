@@ -130,7 +130,7 @@ public interface CommandPlugin {
 
 ## Meilenstein-Backlog
 
-### Milestone 0 — Projekt-Setup & Fundament
+### Milestone 0 ✅ — Projekt-Setup & Fundament
 > **Ziel:** Lauffähiges Projekt-Skeleton, alle Werkzeuge konfiguriert, erstes JavaFX-Fenster öffnet sich.
 
 | # | Story | Artefakte |
@@ -146,7 +146,7 @@ public interface CommandPlugin {
 
 ---
 
-### Milestone 1 — Dual-Pane Dateiansicht
+### Milestone 1 ✅ — Dual-Pane Dateiansicht
 > **Ziel:** Beide Panels zeigen das Dateisystem navigierbar an.
 
 | # | Story | Kernsymbole |
@@ -168,7 +168,7 @@ public interface CommandPlugin {
 
 ---
 
-### Milestone 2 — Built-in Commands & Command-Engine
+### Milestone 2 ✅ — Built-in Commands & Command-Engine
 > **Ziel:** Alle klassischen Dateioperationen funktionieren intern. Command-System steht.
 
 | # | Story | Kernsymbole |
@@ -192,7 +192,7 @@ public interface CommandPlugin {
 
 ---
 
-### Milestone 3 — Konfigurierbare UI (Menüs, Toolbar, Hotkeys)
+### Milestone 3 ✅ — Konfigurierbare UI (Menüs, Toolbar, Hotkeys)
 > **Ziel:** Toolbar, Menüleiste und Shortcuts werden vollständig aus JSON-Konfiguration aufgebaut.
 
 | # | Story | Kernsymbole |
@@ -214,7 +214,7 @@ public interface CommandPlugin {
 
 ---
 
-### Milestone 4 — OS-Command-Adapter & Sicherheit
+### Milestone 4 ✅ — OS-Command-Adapter & Sicherheit
 > **Ziel:** Externe Programme als Commands einbindbar. Sicherheitsregeln greifen.
 
 | # | Story | Kernsymbole |
@@ -232,7 +232,7 @@ public interface CommandPlugin {
 
 ---
 
-### Milestone 5 — Plugin-System
+### Milestone 5 ✅ — Plugin-System
 > **Ziel:** Externe JARs liefern neue Commands, werden sicher geladen und in UI integriert.
 
 | # | Story | Kernsymbole |
@@ -251,7 +251,7 @@ public interface CommandPlugin {
 
 ---
 
-### Milestone 6 — Polishing, UX & Stabilisierung
+### Milestone 6 ✅ — Polishing, UX & Stabilisierung
 > **Ziel:** Produktionsreife Qualität, angenehmere UX, vollständige Dokumentation.
 
 | # | Story | Kernsymbole |
@@ -261,7 +261,7 @@ public interface CommandPlugin {
 | 6.3 ✅ | Tabs je Pane für mehrere parallele Verzeichnisse | `MainWindowController`, `main-window.fxml` |
 | 6.4 ✅ | Drag & Drop zwischen Panes (löst `file.copy`/`file.move` aus) | `FilePaneController`, `MainWindowController` |
 | 6.5 ✅ | Datei-Vorschau (Text, Bild) in separatem Panel oder Dialog | `PreviewController` |
-| 6.6 | Benennungskonventionen, Javadoc, Code-Review | alle Module |
+| 6.6 ✅ | Benennungskonventionen, Javadoc, Code-Review | alle Module |
 | 6.7 ✅ | Integrationstests: kritische Flows (Copy, Move, Plugin-Load) | `*IntegrationTest` |
 | 6.8 ✅ | Native Packaging: `jpackage` für Windows-Installer (`jlink`-optimiertes Runtime) | `pom.xml`, `packaging/` |
 | 6.9 ✅ | Changelog, vollständige `README.md`, Screenshot in Doku | `CHANGELOG.md`, `README.md` |

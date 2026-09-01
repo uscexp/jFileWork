@@ -1,22 +1,43 @@
+<#
+.SYNOPSIS
+Builds a Windows packaging layout for jFileWork using jlink and jpackage.
+
+.DESCRIPTION
+Creates a staged application folder, builds a custom runtime image, and packages either
+an EXE installer (requires WiX) or an app-image fallback.
+
+.PARAMETER SkipMaven
+Skips Maven build and dependency copy. Use only when staging inputs already exist.
+
+.PARAMETER PrepareOnly
+Prepares staging and command arguments without executing jpackage.
+
+.PARAMETER PackageType
+Requested package type for jpackage (`exe` or `app-image`).
+
+.PARAMETER AllowAppImageFallback
+Falls back to `app-image` when WiX is not available for EXE packaging.
+#>
 [CmdletBinding()]
 param(
     [switch]$SkipMaven,
     [switch]$PrepareOnly,
     [ValidateSet('exe', 'app-image')]
     [string]$PackageType = 'exe',
-    [switch]$AllowAppImageFallback,
-    [string]$Configuration = 'Release'
+    [switch]$AllowAppImageFallback
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 function Write-Step {
+    # Uniform log prefix for script progress messages.
     param([string]$Message)
     Write-Host "[jFileWork Packaging] $Message"
 }
 
 function Test-WixToolsAvailable {
+    # jpackage supports WiX v3 (candle/light) and newer wix CLI variants.
     $wixCommand = Get-Command wix -ErrorAction SilentlyContinue
     $candleCommand = Get-Command candle.exe -ErrorAction SilentlyContinue
     $lightCommand = Get-Command light.exe -ErrorAction SilentlyContinue

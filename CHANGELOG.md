@@ -11,7 +11,8 @@ Alle nennenswerten Aenderungen an jFileWork werden hier dokumentiert.
 
 ### Changed
 - Projekt-Dokumentation erweitert um M6-Status, Packaging-Hinweise und Testabdeckung.
+- Benennung und Javadocs in neuen M6-Test- und Packaging-Dateien konsolidiert.
 
 ### Notes
-- Ein finaler Screenshot der aktuellen UI wird separat in der Doku ergaenzt, sobald das Layout stabil genug ist.
+- Aktueller UI-Screenshot liegt unter `docs/screenshots/m6-main-window.png`.
 
