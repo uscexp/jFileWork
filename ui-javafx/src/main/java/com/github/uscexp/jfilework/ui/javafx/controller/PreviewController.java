@@ -27,6 +27,8 @@ import java.util.Locale;
 public class PreviewController {
 
     private static final int MAX_TEXT_LINES = 200;
+    private static final long MAX_TEXT_BYTES = 2L * 1024L * 1024L;
+    private static final int BINARY_SNIFF_BYTES = 1024;
 
     public void showPreview(Stage owner, Path path) {
         Stage stage = new Stage();
@@ -88,6 +90,14 @@ public class PreviewController {
 
     private static String loadTextPreview(Path path) {
         try {
+            long fileSize = Files.size(path);
+            if (fileSize > MAX_TEXT_BYTES) {
+                return "File is too large for text preview (" + fileSize + " bytes).";
+            }
+            if (isProbablyBinary(path)) {
+                return "Binary file preview is not supported.";
+            }
+
             List<String> lines = Files.readAllLines(path, StandardCharsets.UTF_8);
             if (lines.size() <= MAX_TEXT_LINES) {
                 return String.join(System.lineSeparator(), lines);
@@ -99,6 +109,28 @@ public class PreviewController {
                     + "... truncated after " + MAX_TEXT_LINES + " lines ...";
         } catch (IOException exception) {
             return "Cannot preview file: " + exception.getMessage();
+        }
+    }
+
+    private static boolean isProbablyBinary(Path path) throws IOException {
+        try (var stream = Files.newInputStream(path)) {
+            byte[] buffer = new byte[BINARY_SNIFF_BYTES];
+            int read = stream.read(buffer);
+            if (read <= 0) {
+                return false;
+            }
+
+            int suspicious = 0;
+            for (int index = 0; index < read; index++) {
+                byte value = buffer[index];
+                if (value == 0) {
+                    return true;
+                }
+                if ((value < 0x09) || (value > 0x0D && value < 0x20)) {
+                    suspicious++;
+                }
+            }
+            return suspicious > read / 3;
         }
     }
 }

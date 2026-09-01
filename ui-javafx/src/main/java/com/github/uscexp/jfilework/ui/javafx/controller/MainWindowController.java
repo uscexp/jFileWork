@@ -49,11 +49,12 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.SplitPane;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.ToolBar;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,6 +63,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -79,8 +81,8 @@ public class MainWindowController {
     @FXML private Menu toolsMenu;
     @FXML private ToolBar toolBar;
     @FXML private SplitPane splitPane;
-    @FXML private VBox leftPane;
-    @FXML private VBox rightPane;
+    @FXML private TabPane leftTabPane;
+    @FXML private TabPane rightTabPane;
     @FXML private Label statusLabel;
 
     private final FileService fileService = new LocalFileService();
@@ -100,8 +102,8 @@ public class MainWindowController {
     private final SessionService sessionService = new SessionService();
     private final PluginManager pluginManager = new PluginManager(commandRegistry);
 
-    private FilePaneController leftPaneController;
-    private FilePaneController rightPaneController;
+    private final Map<Tab, FilePaneController> leftPaneControllers = new HashMap<>();
+    private final Map<Tab, FilePaneController> rightPaneControllers = new HashMap<>();
     private List<ConfiguredAction> configuredActions = List.of();
     private List<PluginRuntimeInfo> pluginRuntimeInfos = List.of();
     private boolean keyBindingsInstalled;
@@ -116,35 +118,28 @@ public class MainWindowController {
         pluginRuntimeInfos = pluginManager.loadPlugins(appConfig.plugins(), APPLICATION_VERSION);
         loadedSession = sessionService.load().orElse(null);
 
-        try {
-            leftPaneController = mountFilePane(leftPane, "left", "Left pane");
-            rightPaneController = mountFilePane(rightPane, "right", "Right pane");
+        Path leftStartPath = resolveStartPath(
+                "jfilework.leftStartPath",
+                appConfig.ui().leftStartPath(),
+                loadedSession == null ? null : loadedSession.leftPath()
+        );
+        Path rightStartPath = resolveStartPath(
+                "jfilework.rightStartPath",
+                appConfig.ui().rightStartPath(),
+                loadedSession == null ? null : loadedSession.rightPath()
+        );
 
-            Path leftStartPath = resolveStartPath(
-                    "jfilework.leftStartPath",
-                    appConfig.ui().leftStartPath(),
-                    loadedSession == null ? null : loadedSession.leftPath()
-            );
-            Path rightStartPath = resolveStartPath(
-                    "jfilework.rightStartPath",
-                    appConfig.ui().rightStartPath(),
-                    loadedSession == null ? null : loadedSession.rightPath()
-            );
+        initializeTabPanes();
+        createAndSelectTab(ActivePaneTracker.PaneSide.LEFT, leftStartPath);
+        createAndSelectTab(ActivePaneTracker.PaneSide.RIGHT, rightStartPath);
 
-            leftPaneController.navigateTo(leftStartPath);
-            rightPaneController.navigateTo(rightStartPath);
+        configuredActions = new UiActionMapper(commandRegistry).map(appConfig);
+        CommandExecutionHandler handler = this::executeConfiguredCommand;
+        toolbarBuilder.build(toolBar, configuredActions, handler);
+        menuBuilder.build(fileMenu, toolsMenu, configuredActions, handler);
 
-            configuredActions = new UiActionMapper(commandRegistry).map(appConfig);
-            CommandExecutionHandler handler = this::executeConfiguredCommand;
-            toolbarBuilder.build(toolBar, configuredActions, handler);
-            menuBuilder.build(fileMenu, toolsMenu, configuredActions, handler);
-
-            statusBarController.showMessage("Ready");
-            log.info("Main window initialised with left={} and right={}", leftStartPath, rightStartPath);
-        } catch (IOException e) {
-            log.error("Cannot initialise file panes", e);
-            statusBarController.showMessage("Cannot initialize UI: " + e.getMessage());
-        }
+        statusBarController.showMessage("Ready");
+        log.info("Main window initialised with left={} and right={}", leftStartPath, rightStartPath);
 
         splitPane.sceneProperty().addListener((ignoredObs, ignoredOldScene, newScene) -> {
             if (newScene != null) {
@@ -170,12 +165,7 @@ public class MainWindowController {
         if (statusLabel.getScene() != null && statusLabel.getScene().getWindow() instanceof Stage stage) {
             saveSession(stage);
         }
-        if (leftPaneController != null) {
-            leftPaneController.stopWatching();
-        }
-        if (rightPaneController != null) {
-            rightPaneController.stopWatching();
-        }
+        allPaneControllers().forEach(FilePaneController::stopWatching);
         pluginManager.close();
         commandExecutor.close();
         Platform.exit();
@@ -202,6 +192,9 @@ public class MainWindowController {
     private void onPreferences() {
         Stage owner = statusLabel.getScene() == null ? null : (Stage) statusLabel.getScene().getWindow();
         appConfig = ensureNonNullConfig(appConfig);
+
+        FilePaneController leftPaneController = getSelectedController(ActivePaneTracker.PaneSide.LEFT);
+        FilePaneController rightPaneController = getSelectedController(ActivePaneTracker.PaneSide.RIGHT);
 
         Optional<com.github.uscexp.jfilework.core.config.UiConfig> maybeUpdated = preferencesController.showDialog(
                 owner,
@@ -233,9 +226,7 @@ public class MainWindowController {
 
     @FXML
     private void onQuickPreview() {
-        FilePaneController active = activePaneTracker.getActivePane() == ActivePaneTracker.PaneSide.LEFT
-                ? leftPaneController
-                : rightPaneController;
+        FilePaneController active = getSelectedController(activePaneTracker.getActivePane());
         if (active == null) {
             statusBarController.showMessage("No active pane.");
             return;
@@ -249,6 +240,46 @@ public class MainWindowController {
 
         Stage owner = statusLabel.getScene() == null ? null : (Stage) statusLabel.getScene().getWindow();
         previewController.showPreview(owner, selected.getFirst());
+    }
+
+    @FXML
+    private void onNewLeftTab() {
+        FilePaneController selected = getSelectedController(ActivePaneTracker.PaneSide.LEFT);
+        Path initialPath = selected != null && selected.getCurrentPath() != null
+                ? selected.getCurrentPath()
+                : resolveStartPath("jfilework.leftStartPath", appConfig.ui().leftStartPath(), null);
+        createAndSelectTab(ActivePaneTracker.PaneSide.LEFT, initialPath);
+    }
+
+    @FXML
+    private void onNewRightTab() {
+        FilePaneController selected = getSelectedController(ActivePaneTracker.PaneSide.RIGHT);
+        Path initialPath = selected != null && selected.getCurrentPath() != null
+                ? selected.getCurrentPath()
+                : resolveStartPath("jfilework.rightStartPath", appConfig.ui().rightStartPath(), null);
+        createAndSelectTab(ActivePaneTracker.PaneSide.RIGHT, initialPath);
+    }
+
+    @FXML
+    private void onCloseActiveTab() {
+        ActivePaneTracker.PaneSide side = activePaneTracker.getActivePane();
+        TabPane targetTabPane = side == ActivePaneTracker.PaneSide.LEFT ? leftTabPane : rightTabPane;
+        Map<Tab, FilePaneController> targetMap = side == ActivePaneTracker.PaneSide.LEFT ? leftPaneControllers : rightPaneControllers;
+        if (targetTabPane.getTabs().size() <= 1) {
+            statusBarController.showMessage("Cannot close the last tab.");
+            return;
+        }
+
+        Tab selectedTab = targetTabPane.getSelectionModel().getSelectedItem();
+        if (selectedTab == null) {
+            statusBarController.showMessage("No active tab selected.");
+            return;
+        }
+        FilePaneController controller = targetMap.remove(selectedTab);
+        if (controller != null) {
+            controller.stopWatching();
+        }
+        targetTabPane.getTabs().remove(selectedTab);
     }
 
     // -------------------------------------------------------------------------
@@ -371,8 +402,7 @@ public class MainWindowController {
             if (processOutputController != null && processOutputController.hasProcess() && result.status() == CommandStatus.FAILED) {
                 processOutputController.markFailed(result.message());
             }
-            leftPaneController.refreshCurrentDirectoryView();
-            rightPaneController.refreshCurrentDirectoryView();
+            allPaneControllers().forEach(FilePaneController::refreshCurrentDirectoryView);
             statusBarController.showMessage(result.message());
             if (result.status() == CommandStatus.FAILED) {
                 log.warn("Command '{}' failed: {}", commandId, result.message());
@@ -442,12 +472,8 @@ public class MainWindowController {
     }
 
     private CommandContext buildContext() {
-        FilePaneController active = activePaneTracker.getActivePane() == ActivePaneTracker.PaneSide.LEFT
-                ? leftPaneController
-                : rightPaneController;
-        FilePaneController inactive = activePaneTracker.getActivePane() == ActivePaneTracker.PaneSide.LEFT
-                ? rightPaneController
-                : leftPaneController;
+        FilePaneController active = getSelectedController(activePaneTracker.getActivePane());
+        FilePaneController inactive = getSelectedController(oppositeSide(activePaneTracker.getActivePane()));
 
         if (active == null || inactive == null) {
             statusBarController.showMessage("Panes are not ready yet.");
@@ -472,33 +498,21 @@ public class MainWindowController {
         );
     }
 
-    private FilePaneController mountFilePane(VBox target, String paneId, String title) throws IOException {
+    private MountedPane mountFilePane(String paneId, String title, ActivePaneTracker.PaneSide side) throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/github/uscexp/jfilework/ui/javafx/file-pane.fxml"));
         Parent paneRoot = loader.load();
         FilePaneController controller = loader.getController();
         controller.configure(paneId, title, fileService, this::updateStatus);
         controller.setDragDropTargetHandler(this::executeDragDropTransfer);
 
-        target.getChildren().setAll(paneRoot);
-        target.focusedProperty().addListener((ignoredObs, ignoredOldValue, focused) -> {
-            if (focused) {
-                activePaneTracker.setActivePane("left".equals(paneId)
-                        ? ActivePaneTracker.PaneSide.LEFT
-                        : ActivePaneTracker.PaneSide.RIGHT);
-                statusBarController.showMessage("Active pane: " + activePaneTracker.getActivePane());
-            }
-        });
-
         Node table = controller.getFileTable();
         table.focusedProperty().addListener((ignoredObs, ignoredOldValue, focused) -> {
             if (focused) {
-                activePaneTracker.setActivePane("left".equals(paneId)
-                        ? ActivePaneTracker.PaneSide.LEFT
-                        : ActivePaneTracker.PaneSide.RIGHT);
+                activePaneTracker.setActivePane(side);
             }
         });
 
-        return controller;
+        return new MountedPane(paneRoot, controller);
     }
 
     private void executeDragDropTransfer(List<Path> selectedPaths, Path targetDirectory, boolean move) {
@@ -531,8 +545,7 @@ public class MainWindowController {
         Map<String, String> params = Map.of("target", targetDirectory.toString());
         commandExecutor.execute(optionalCommand.get(), context, params)
                 .thenAccept(result -> Platform.runLater(() -> {
-                    leftPaneController.refreshCurrentDirectoryView();
-                    rightPaneController.refreshCurrentDirectoryView();
+                    allPaneControllers().forEach(FilePaneController::refreshCurrentDirectoryView);
                     statusBarController.showMessage(result.message());
                     if (result.status() == CommandStatus.FAILED) {
                         showErrorDialog("Drag and Drop", result.message());
@@ -635,6 +648,8 @@ public class MainWindowController {
     }
 
     private void saveSession(Stage stage) {
+        FilePaneController leftPaneController = getSelectedController(ActivePaneTracker.PaneSide.LEFT);
+        FilePaneController rightPaneController = getSelectedController(ActivePaneTracker.PaneSide.RIGHT);
         String leftPath = leftPaneController == null || leftPaneController.getCurrentPath() == null
                 ? ""
                 : leftPaneController.getCurrentPath().toString();
@@ -651,5 +666,71 @@ public class MainWindowController {
                 rightPath
         );
         sessionService.save(sessionState);
+    }
+
+    private void initializeTabPanes() {
+        leftTabPane.setId("leftTabPane");
+        rightTabPane.setId("rightTabPane");
+
+        leftTabPane.getSelectionModel().selectedItemProperty().addListener((ignoredObs, ignoredOldTab, newTab) -> {
+            if (newTab != null) {
+                activePaneTracker.setActivePane(ActivePaneTracker.PaneSide.LEFT);
+            }
+        });
+        rightTabPane.getSelectionModel().selectedItemProperty().addListener((ignoredObs, ignoredOldTab, newTab) -> {
+            if (newTab != null) {
+                activePaneTracker.setActivePane(ActivePaneTracker.PaneSide.RIGHT);
+            }
+        });
+    }
+
+    private void createAndSelectTab(ActivePaneTracker.PaneSide side, Path initialPath) {
+        TabPane targetTabPane = side == ActivePaneTracker.PaneSide.LEFT ? leftTabPane : rightTabPane;
+        Map<Tab, FilePaneController> targetMap = side == ActivePaneTracker.PaneSide.LEFT ? leftPaneControllers : rightPaneControllers;
+        String panePrefix = side == ActivePaneTracker.PaneSide.LEFT ? "left" : "right";
+        int nextIndex = targetTabPane.getTabs().size() + 1;
+        String paneId = nextIndex == 1 ? panePrefix : panePrefix + "Tab" + nextIndex;
+
+        try {
+            MountedPane mountedPane = mountFilePane(paneId, side == ActivePaneTracker.PaneSide.LEFT ? "Left pane" : "Right pane", side);
+            FilePaneController controller = mountedPane.controller();
+            controller.navigateTo(initialPath);
+
+            Tab tab = new Tab(panePrefix.toUpperCase() + " " + nextIndex);
+            tab.setClosable(false);
+            tab.setContent(mountedPane.root());
+            targetMap.put(tab, controller);
+            targetTabPane.getTabs().add(tab);
+            targetTabPane.getSelectionModel().select(tab);
+        } catch (IOException exception) {
+            log.error("Cannot create tab for side {}", side, exception);
+            statusBarController.showMessage("Cannot create tab: " + exception.getMessage());
+        }
+    }
+
+    private ActivePaneTracker.PaneSide oppositeSide(ActivePaneTracker.PaneSide side) {
+        return side == ActivePaneTracker.PaneSide.LEFT ? ActivePaneTracker.PaneSide.RIGHT : ActivePaneTracker.PaneSide.LEFT;
+    }
+
+    private FilePaneController getSelectedController(ActivePaneTracker.PaneSide side) {
+        TabPane tabPane = side == ActivePaneTracker.PaneSide.LEFT ? leftTabPane : rightTabPane;
+        if (tabPane == null) {
+            return null;
+        }
+        Tab selectedTab = tabPane.getSelectionModel().getSelectedItem();
+        if (selectedTab == null) {
+            return null;
+        }
+        return (side == ActivePaneTracker.PaneSide.LEFT ? leftPaneControllers : rightPaneControllers).get(selectedTab);
+    }
+
+    private List<FilePaneController> allPaneControllers() {
+        List<FilePaneController> all = new ArrayList<>();
+        all.addAll(leftPaneControllers.values());
+        all.addAll(rightPaneControllers.values());
+        return all;
+    }
+
+    private record MountedPane(Parent root, FilePaneController controller) {
     }
 }

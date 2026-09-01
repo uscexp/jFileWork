@@ -258,14 +258,14 @@ public interface CommandPlugin {
 |---|-------|-------------|
 | 6.1 | Datei-Icons je Typ (via `FileTypeIconResolver`) | `FileTypeIconResolver` |
 | 6.2 | Filter / Schnellsuche je Pane (Dateiname-Muster) | `FilePaneController` |
-| 6.3 | Tabs je Pane für mehrere parallele Verzeichnisse | `PaneTabController` |
-| 6.4 | Drag & Drop zwischen Panes (löst `file.copy`/`file.move` aus) | `DragDropHandler` |
-| 6.5 | Datei-Vorschau (Text, Bild) in separatem Panel oder Dialog | `PreviewController` |
+| 6.3 ✅ | Tabs je Pane für mehrere parallele Verzeichnisse | `MainWindowController`, `main-window.fxml` |
+| 6.4 ✅ | Drag & Drop zwischen Panes (löst `file.copy`/`file.move` aus) | `FilePaneController`, `MainWindowController` |
+| 6.5 ✅ | Datei-Vorschau (Text, Bild) in separatem Panel oder Dialog | `PreviewController` |
 | 6.6 | Benennungskonventionen, Javadoc, Code-Review | alle Module |
 | 6.7 | Integrationstests: kritische Flows (Copy, Move, Plugin-Load) | `*IntegrationTest` |
 | 6.8 | Native Packaging: `jpackage` für Windows-Installer (`jlink`-optimiertes Runtime) | `pom.xml`, `packaging/` |
 | 6.9 | Changelog, vollständige `README.md`, Screenshot in Doku | `CHANGELOG.md`, `README.md` |
-| 6.10 | UI-Test: Drag & Drop löst Copy/Move aus, beide Panes aktualisiert | `DragDropUiTest` |
+| 6.10 ✅ | UI-Test: Drag & Drop löst Copy/Move aus, beide Panes aktualisiert | `DragDropUiTest` |
 | 6.11 | UI-Test: Filter-/Suchfeld blendet nicht-passende Einträge aus | `FilterUiTest` |
 | 6.12 | UI-Test-Coverage-Report in Maven-Ausgabe (Surefire + JaCoCo) | `pom.xml` |
 

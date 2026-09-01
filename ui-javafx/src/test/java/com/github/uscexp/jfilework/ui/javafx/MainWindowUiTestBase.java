@@ -28,6 +28,7 @@ public abstract class MainWindowUiTestBase extends FxTestBase {
         Files.createDirectory(leftRoot.resolve("sub"));
         Files.writeString(leftRoot.resolve("alpha.txt"), "alpha");
         Files.writeString(leftRoot.resolve("beta.txt"), "beta");
+        Files.write(leftRoot.resolve("binary.bin"), new byte[] {0x00, 0x01, 0x02, 0x03});
 
         Files.writeString(rightRoot.resolve("right.txt"), "right");
 

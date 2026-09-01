@@ -189,6 +189,15 @@ See [`PLUGIN_DEV.md`](PLUGIN_DEV.md) for the plugin development guide.
 
 ---
 
+## UX Notes (M6)
+
+- Each side now uses tabs, so multiple directories can stay open in parallel.
+- Use `View -> New Left Tab`, `View -> New Right Tab`, and `View -> Close Active Tab`.
+- `F3` opens quick preview for text and image files.
+- Binary files and very large text files show a safe hint instead of loading full content.
+
+---
+
 ## Development Milestones
 
 | Milestone | Focus |
@@ -199,5 +208,5 @@ See [`PLUGIN_DEV.md`](PLUGIN_DEV.md) for the plugin development guide.
 | **M3** ✅ | Config-driven toolbar, menus, hotkeys, preferences and session persistence |
 | **M4** ✅ | OS-command adapter + pragmatic security rules |
 | **M5** ✅ | Plugin system (ServiceLoader, isolated loader, demo plugin) |
-| **M6** | Polishing, tabs, drag & drop, native packaging |
+| **M6** 🚧 | Polishing, tabs, drag & drop, native packaging (tabs + preview + drag/drop done) |
 

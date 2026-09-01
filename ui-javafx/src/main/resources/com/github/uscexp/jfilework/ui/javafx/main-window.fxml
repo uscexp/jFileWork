@@ -21,6 +21,10 @@
                 <Menu text="View">
                     <MenuItem text="Preferences…" onAction="#onPreferences"/>
                     <MenuItem text="Quick Preview (F3)" onAction="#onQuickPreview"/>
+                    <SeparatorMenuItem/>
+                    <MenuItem text="New Left Tab" onAction="#onNewLeftTab"/>
+                    <MenuItem text="New Right Tab" onAction="#onNewRightTab"/>
+                    <MenuItem text="Close Active Tab" onAction="#onCloseActiveTab"/>
                     <MenuItem text="Plugin Settings…" onAction="#onPluginSettings"/>
                 </Menu>
 
@@ -44,13 +48,11 @@
                    BorderPane.alignment="CENTER">
 
             <!-- Left Pane — FilePaneController injected in M1 -->
-            <VBox fx:id="leftPane" minWidth="200"
-                  style="-fx-border-color: #cccccc; -fx-border-width: 0 1 0 0;">
-            </VBox>
+            <TabPane fx:id="leftTabPane" minWidth="200"
+                     style="-fx-border-color: #cccccc; -fx-border-width: 0 1 0 0;"/>
 
             <!-- Right Pane — FilePaneController injected in M1 -->
-            <VBox fx:id="rightPane" minWidth="200">
-            </VBox>
+            <TabPane fx:id="rightTabPane" minWidth="200"/>
 
         </SplitPane>
     </center>
