@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.testfx.api.FxAssert;
 import org.testfx.matcher.base.NodeMatchers;
+import org.testfx.service.query.EmptyNodeQueryException;
 import org.testfx.util.WaitForAsyncUtils;
 
 import java.nio.file.Path;
@@ -52,9 +53,16 @@ class ProcessOutputUiTest extends MainWindowUiTestBase {
     }
 
     @Test
-    void processOutputWindowShowsLiveOutputAndKillTerminatesProcess() {
+    void processOutputWindowShowsLiveOutputAndKillTerminatesProcess() throws Exception {
         clickOn("#action-runProcess");
 
+        WaitForAsyncUtils.waitFor(8, TimeUnit.SECONDS, () -> {
+            try {
+                return lookup("#processOutputArea").tryQuery().isPresent();
+            } catch (EmptyNodeQueryException exception) {
+                return false;
+            }
+        });
         FxAssert.verifyThat("#processOutputArea", NodeMatchers.isVisible());
         WaitForAsyncUtils.sleep(700, TimeUnit.MILLISECONDS);
 

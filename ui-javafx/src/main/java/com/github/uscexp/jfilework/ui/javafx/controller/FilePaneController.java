@@ -4,10 +4,12 @@ import com.github.uscexp.jfilework.core.fs.FileEntry;
 import com.github.uscexp.jfilework.core.fs.FileService;
 import com.github.uscexp.jfilework.core.fs.FileWatcherService;
 import com.github.uscexp.jfilework.ui.javafx.model.FileItemViewModel;
+import com.github.uscexp.jfilework.ui.javafx.model.FileTypeIconResolver;
 import com.github.uscexp.jfilework.ui.javafx.model.PaneStateViewModel;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.SelectionMode;
@@ -28,6 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.function.Consumer;
+import java.util.Locale;
 
 /**
  * Reusable controller for one file pane.
@@ -40,7 +43,9 @@ public class FilePaneController {
 
     @FXML private Label paneTitleLabel;
     @FXML private TextField pathField;
+    @FXML private TextField filterField;
     @FXML private TableView<FileItemViewModel> fileTable;
+    @FXML private TableColumn<FileItemViewModel, String> iconColumn;
     @FXML private TableColumn<FileItemViewModel, String> nameColumn;
     @FXML private TableColumn<FileItemViewModel, String> sizeColumn;
     @FXML private TableColumn<FileItemViewModel, String> modifiedColumn;
@@ -52,11 +57,14 @@ public class FilePaneController {
     private Consumer<String> statusConsumer = ignored -> { };
     private FileWatcherService fileWatcherService;
     private String paneId = "pane";
+    private final FileTypeIconResolver fileTypeIconResolver = new FileTypeIconResolver();
+    private final ObservableList<FileItemViewModel> allRows = FXCollections.observableArrayList();
 
     @FXML
     public void initialize() {
         fileTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
 
+        iconColumn.setCellValueFactory(cell -> new SimpleStringProperty(fileTypeIconResolver.resolve(cell.getValue())));
         nameColumn.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().getName()));
         sizeColumn.setCellValueFactory(cell -> {
             FileItemViewModel item = cell.getValue();
@@ -71,6 +79,7 @@ public class FilePaneController {
         typeColumn.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().getType()));
 
         fileTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        fileTable.setItems(FXCollections.observableArrayList());
         fileTable.setRowFactory(tableView -> {
             TableRow<FileItemViewModel> row = new TableRow<>();
             row.setOnMouseClicked(event -> {
@@ -88,6 +97,8 @@ public class FilePaneController {
             }
             paneState.getSelectedPaths().setAll(selectedPaths);
         });
+
+        filterField.textProperty().addListener((ignoredObs, ignoredOldValue, ignoredNewValue) -> applyFilter());
     }
 
     public void configure(String paneId, String paneTitle, FileService fileService, Consumer<String> statusConsumer) {
@@ -97,6 +108,7 @@ public class FilePaneController {
 
         paneTitleLabel.setText(paneTitle);
         pathField.setId(paneId + "PathField");
+        filterField.setId(paneId + "FilterField");
         fileTable.setId(paneId + "FileTable");
     }
 
@@ -189,13 +201,29 @@ public class FilePaneController {
                     .map(FileItemViewModel::new)
                     .toList();
             rows.addAll(fromService);
-            fileTable.setItems(FXCollections.observableArrayList(rows));
+            allRows.setAll(rows);
+            applyFilter();
             statusConsumer.accept(String.format("%s: %d item(s)", paneId, rows.size()));
         } catch (IOException e) {
             log.warn("Cannot read directory {}", path, e);
             statusConsumer.accept("Cannot read directory: " + path);
+            allRows.clear();
             fileTable.setItems(FXCollections.observableArrayList());
         }
+    }
+
+    private void applyFilter() {
+        String rawFilter = filterField.getText();
+        if (rawFilter == null || rawFilter.isBlank()) {
+            fileTable.setItems(FXCollections.observableArrayList(allRows));
+            return;
+        }
+
+        String filter = rawFilter.toLowerCase(Locale.ROOT).trim();
+        List<FileItemViewModel> filtered = allRows.stream()
+                .filter(item -> item.isParentLink() || item.getName().toLowerCase(Locale.ROOT).contains(filter))
+                .toList();
+        fileTable.setItems(FXCollections.observableArrayList(filtered));
     }
 
     private void restartWatcher() {
