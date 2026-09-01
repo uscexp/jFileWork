@@ -44,6 +44,32 @@ function Test-WixToolsAvailable {
     return $null -ne $wixCommand -or ($null -ne $candleCommand -and $null -ne $lightCommand)
 }
 
+function Get-NormalizedAppVersion {
+    param([string]$RootDirectory)
+
+    $pomPath = Join-Path $RootDirectory 'pom.xml'
+    if (-not (Test-Path $pomPath)) {
+        return '0.0.1'
+    }
+
+    try {
+        [xml]$pom = Get-Content -Path $pomPath
+        $rawVersion = $pom.project.version
+        if (-not $rawVersion) {
+            return '0.0.1'
+        }
+
+        # jpackage on Windows expects a numeric dotted version.
+        if ($rawVersion -match '([0-9]+(\.[0-9]+)+)') {
+            return $Matches[1]
+        }
+
+        return '0.0.1'
+    } catch {
+        return '0.0.1'
+    }
+}
+
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $uiModule = Join-Path $root 'ui-javafx'
 $targetDir = Join-Path $uiModule 'target'
@@ -53,7 +79,7 @@ $runtimeLibDir = Join-Path $packagingDir 'runtime-libs'
 $runtimeDir = Join-Path $packagingDir 'runtime'
 $installerDir = Join-Path $packagingDir 'installer'
 $appName = 'jFileWork'
-$appVersion = '0.0.1'
+$appVersion = Get-NormalizedAppVersion -RootDirectory $root
 $mainClass = 'com.github.uscexp.jfilework.ui.javafx.MainLauncher'
 $runtimeModules = @(
     'java.base',

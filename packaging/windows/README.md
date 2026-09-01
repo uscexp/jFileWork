@@ -24,6 +24,8 @@ The script will:
 4. Build a custom runtime image with `jlink`.
 5. Package a Windows installer with `jpackage`.
 
+The installer version is derived from the parent `pom.xml` and normalized to a numeric format accepted by `jpackage`.
+
 The installer is written to:
 
 ```text
@@ -39,6 +41,12 @@ If you want to verify the staging logic without invoking `jlink`/`jpackage`, use
 ```
 
 This is useful for quick checks when the build artifacts already exist.
+
+If WiX is not installed, you can still validate packaging arguments with automatic fallback:
+
+```powershell
+.\packaging\windows\build-installer.ps1 -PrepareOnly -AllowAppImageFallback
+```
 
 ## Maven profile
 

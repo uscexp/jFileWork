@@ -12,11 +12,11 @@ It is a local desktop application — no server, no network stack.
 | Property        | Value |
 |-----------------|-------|
 | Language        | Java 26 (Java-only, no Kotlin) |
-| UI Framework    | JavaFX 23 (OpenJFX) |
+| UI Framework    | JavaFX 25 (OpenJFX) |
 | Build System    | Maven 3.9+ (multi-module) |
 | JSON Config     | Jackson 2.18 |
 | Logging         | SLF4J 2 + Logback 1.5 |
-| Unit Tests      | JUnit 5.11 |
+| Unit Tests      | JUnit Jupiter 6.1 |
 | UI Tests        | TestFX 4.0.18 + Monocle 21.0.2 (headless) |
 | Plugin System   | `java.util.ServiceLoader` + isolated `URLClassLoader` |
 | Security        | Pragmatic: whitelist + parameter sanitiser (no strong sandbox) |

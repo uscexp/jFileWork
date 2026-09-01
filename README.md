@@ -1,7 +1,9 @@
 # jFileWork
 
 A **dual-pane file manager** for the local file system — inspired by Total Commander.  
-Built with **Java 26** and **JavaFX 23**, featuring a fully configuration-driven UI and a JAR plugin system.
+Built with **Java 26** and **JavaFX 25**, featuring a fully configuration-driven UI and a JAR plugin system.
+
+> Current release line: **0.0.1-Alpha-SNAPSHOT** (alpha quality, feature-complete M0-M6 baseline).
 
 ---
 
@@ -18,6 +20,8 @@ jFileWork/               ← Parent POM (multi-module)
 See [`PLAN.md`](PLAN.md) for the full milestone-based development roadmap.
 
 See [`CHANGELOG.md`](CHANGELOG.md) for a compact list of notable changes.
+
+See [`RELEASE_NOTES.md`](RELEASE_NOTES.md) and [`RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.md) for release-specific guidance.
 
 ---
 
@@ -36,6 +40,12 @@ See [`CHANGELOG.md`](CHANGELOG.md) for a compact list of notable changes.
 # From the project root
 mvn clean install
 ```
+
+## Release
+
+- User-facing highlights: [`RELEASE_NOTES.md`](RELEASE_NOTES.md)
+- Publishing checklist: [`RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.md)
+- Changelog history: [`CHANGELOG.md`](CHANGELOG.md)
 
 ---
 

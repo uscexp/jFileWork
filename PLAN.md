@@ -8,7 +8,7 @@
 | JavaFX 23+ (OpenJFX) | UI-Framework |
 | Jackson | JSON-Konfiguration |
 | SLF4J + Logback | Logging |
-| JUnit 5 | Unit- und Integrationstests |
+| JUnit Jupiter 6 | Unit- und Integrationstests |
 | TestFX + Monocle | UI-Tests (headless) |
 | Maven (Multi-Modul) | Build-System |
 
