@@ -61,6 +61,10 @@ mvn test -Dgroups="!ui"
 mvn test -Dgroups="ui"
 ```
 
+### Coverage report
+
+Run `mvn verify` to generate JaCoCo reports for the modules under `*/target/site/jacoco/`.
+
 ---
 
 ## Configuration
@@ -239,4 +243,4 @@ Current documented screenshot:
 | **M3** ✅ | Config-driven toolbar, menus, hotkeys, preferences and session persistence |
 | **M4** ✅ | OS-command adapter + pragmatic security rules |
 | **M5** ✅ | Plugin system (ServiceLoader, isolated loader, demo plugin) |
-| **M6** 🚧 | Polishing, tabs, drag & drop, native packaging, docs (6.1-6.5 + 6.7-6.9 + 6.10 + 6.11 done) |
+| **M6** 🚧 | Polishing, tabs, drag & drop, native packaging, docs (6.1-6.5, 6.7-6.12 done; 6.6 open) |

@@ -83,6 +83,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <argLine>
+                        @{argLine}
                         --enable-native-access=ALL-UNNAMED
                         -Dglass.platform=Monocle
                         -Dmonocle.platform=Headless

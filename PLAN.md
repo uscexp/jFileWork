@@ -267,7 +267,7 @@ public interface CommandPlugin {
 | 6.9 ✅ | Changelog, vollständige `README.md`, Screenshot in Doku | `CHANGELOG.md`, `README.md` |
 | 6.10 ✅ | UI-Test: Drag & Drop löst Copy/Move aus, beide Panes aktualisiert | `DragDropUiTest` |
 | 6.11 ✅ | UI-Test: Filter-/Suchfeld blendet nicht-passende Einträge aus | `FilterUiTest` |
-| 6.12 | UI-Test-Coverage-Report in Maven-Ausgabe (Surefire + JaCoCo) | `pom.xml` |
+| 6.12 ✅ | UI-Test-Coverage-Report in Maven-Ausgabe (Surefire + JaCoCo) | `pom.xml` |
 
 ---
 

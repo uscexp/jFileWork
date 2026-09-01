@@ -179,6 +179,6 @@ Toolbar buttons, menu items and hotkeys are **not hard-coded** — they are load
 | M3 — Config-driven toolbar / menus / hotkeys | ✅ Done |
 | M4 — OS-command adapter + security | ✅ Done |
 | M5 — Plugin system + demo plugin | ✅ Done |
-| M6 — Polishing, packaging, coverage | 🚧 In Progress (6.1-6.9, 6.10-6.11 done) |
+| M6 — Polishing, packaging, coverage | 🚧 In Progress (6.1-6.5, 6.7-6.12 done; 6.6 open) |
 
 Full milestone details: see [`PLAN.md`](PLAN.md).
