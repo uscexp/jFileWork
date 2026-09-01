@@ -256,8 +256,8 @@ public interface CommandPlugin {
 
 | # | Story | Kernsymbole |
 |---|-------|-------------|
-| 6.1 | Datei-Icons je Typ (via `FileTypeIconResolver`) | `FileTypeIconResolver` |
-| 6.2 | Filter / Schnellsuche je Pane (Dateiname-Muster) | `FilePaneController` |
+| 6.1 ✅ | Datei-Icons je Typ (via `FileTypeIconResolver`) | `FileTypeIconResolver` |
+| 6.2 ✅ | Filter / Schnellsuche je Pane (Dateiname-Muster) | `FilePaneController` |
 | 6.3 ✅ | Tabs je Pane für mehrere parallele Verzeichnisse | `MainWindowController`, `main-window.fxml` |
 | 6.4 ✅ | Drag & Drop zwischen Panes (löst `file.copy`/`file.move` aus) | `FilePaneController`, `MainWindowController` |
 | 6.5 ✅ | Datei-Vorschau (Text, Bild) in separatem Panel oder Dialog | `PreviewController` |
@@ -266,7 +266,7 @@ public interface CommandPlugin {
 | 6.8 | Native Packaging: `jpackage` für Windows-Installer (`jlink`-optimiertes Runtime) | `pom.xml`, `packaging/` |
 | 6.9 | Changelog, vollständige `README.md`, Screenshot in Doku | `CHANGELOG.md`, `README.md` |
 | 6.10 ✅ | UI-Test: Drag & Drop löst Copy/Move aus, beide Panes aktualisiert | `DragDropUiTest` |
-| 6.11 | UI-Test: Filter-/Suchfeld blendet nicht-passende Einträge aus | `FilterUiTest` |
+| 6.11 ✅ | UI-Test: Filter-/Suchfeld blendet nicht-passende Einträge aus | `FilterUiTest` |
 | 6.12 | UI-Test-Coverage-Report in Maven-Ausgabe (Surefire + JaCoCo) | `pom.xml` |
 
 ---
@@ -279,4 +279,3 @@ M0 (1–2 Tage) → M1 (3–5 Tage) → M2 (4–6 Tage) → M3 (3–4 Tage)
 ```
 
 > **Hinweis:** M6 (Tabs, Vorschau) ist optional — kann nach M5 je nach Bedarf priorisiert oder übersprungen werden.
-
