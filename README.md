@@ -211,4 +211,4 @@ See [`PLUGIN_DEV.md`](PLUGIN_DEV.md) for the plugin development guide.
 | **M3** ✅ | Config-driven toolbar, menus, hotkeys, preferences and session persistence |
 | **M4** ✅ | OS-command adapter + pragmatic security rules |
 | **M5** ✅ | Plugin system (ServiceLoader, isolated loader, demo plugin) |
-| **M6** 🚧 | Polishing, tabs, drag & drop, native packaging (6.1-6.5 + 6.10 + 6.11 done) |
+| **M6** 🚧 | Polishing, tabs, drag & drop, native packaging (6.1-6.5 + 6.7 + 6.10 + 6.11 done) |
