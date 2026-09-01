@@ -17,6 +17,8 @@ jFileWork/               ← Parent POM (multi-module)
 
 See [`PLAN.md`](PLAN.md) for the full milestone-based development roadmap.
 
+See [`CHANGELOG.md`](CHANGELOG.md) for a compact list of notable changes.
+
 ---
 
 ## Prerequisites
@@ -217,6 +219,16 @@ When WiX is installed, the script produces a Windows installer under `ui-javafx\
 
 ---
 
+## Screenshots
+
+The current screenshot guidance lives in [`docs/SCREENSHOTS.md`](docs/SCREENSHOTS.md).
+
+Current documented screenshot:
+
+- [`docs/screenshots/m6-main-window.png`](docs/screenshots/m6-main-window.png)
+
+---
+
 ## Development Milestones
 
 | Milestone | Focus |
@@ -227,4 +239,4 @@ When WiX is installed, the script produces a Windows installer under `ui-javafx\
 | **M3** ✅ | Config-driven toolbar, menus, hotkeys, preferences and session persistence |
 | **M4** ✅ | OS-command adapter + pragmatic security rules |
 | **M5** ✅ | Plugin system (ServiceLoader, isolated loader, demo plugin) |
-| **M6** 🚧 | Polishing, tabs, drag & drop, native packaging (6.1-6.5 + 6.7 + 6.8 + 6.10 + 6.11 done) |
+| **M6** 🚧 | Polishing, tabs, drag & drop, native packaging, docs (6.1-6.5 + 6.7-6.9 + 6.10 + 6.11 done) |
