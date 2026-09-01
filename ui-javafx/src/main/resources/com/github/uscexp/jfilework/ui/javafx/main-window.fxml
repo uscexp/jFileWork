@@ -20,6 +20,7 @@
 
                 <Menu text="View">
                     <MenuItem text="Preferences…" onAction="#onPreferences"/>
+                    <MenuItem text="Quick Preview (F3)" onAction="#onQuickPreview"/>
                     <MenuItem text="Plugin Settings…" onAction="#onPluginSettings"/>
                 </Menu>
 

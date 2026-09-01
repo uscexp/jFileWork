@@ -42,6 +42,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
@@ -50,6 +51,8 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.ToolBar;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
@@ -93,6 +96,7 @@ public class MainWindowController {
     private final PreferencesController preferencesController = new PreferencesController();
     private final PluginSettingsController pluginSettingsController = new PluginSettingsController();
     private final CommandResultDialogController commandResultDialogController = new CommandResultDialogController();
+    private final PreviewController previewController = new PreviewController();
     private final SessionService sessionService = new SessionService();
     private final PluginManager pluginManager = new PluginManager(commandRegistry);
 
@@ -146,6 +150,7 @@ public class MainWindowController {
             if (newScene != null) {
                 if (!keyBindingsInstalled) {
                     keyBindingService.bind(newScene, configuredActions, this::executeConfiguredCommand);
+                    installPreviewKeyBinding(newScene);
                     keyBindingsInstalled = true;
                 }
                 if (newScene.getWindow() instanceof Stage stage) {
@@ -224,6 +229,26 @@ public class MainWindowController {
     private void onPluginSettings() {
         Stage owner = statusLabel.getScene() == null ? null : (Stage) statusLabel.getScene().getWindow();
         pluginSettingsController.showDialog(owner, pluginRuntimeInfos);
+    }
+
+    @FXML
+    private void onQuickPreview() {
+        FilePaneController active = activePaneTracker.getActivePane() == ActivePaneTracker.PaneSide.LEFT
+                ? leftPaneController
+                : rightPaneController;
+        if (active == null) {
+            statusBarController.showMessage("No active pane.");
+            return;
+        }
+
+        List<Path> selected = active.getSelectedPathsForOperations();
+        if (selected.isEmpty()) {
+            statusBarController.showMessage("Please select one file to preview.");
+            return;
+        }
+
+        Stage owner = statusLabel.getScene() == null ? null : (Stage) statusLabel.getScene().getWindow();
+        previewController.showPreview(owner, selected.getFirst());
     }
 
     // -------------------------------------------------------------------------
@@ -452,6 +477,7 @@ public class MainWindowController {
         Parent paneRoot = loader.load();
         FilePaneController controller = loader.getController();
         controller.configure(paneId, title, fileService, this::updateStatus);
+        controller.setDragDropTargetHandler(this::executeDragDropTransfer);
 
         target.getChildren().setAll(paneRoot);
         target.focusedProperty().addListener((ignoredObs, ignoredOldValue, focused) -> {
@@ -473,6 +499,45 @@ public class MainWindowController {
         });
 
         return controller;
+    }
+
+    private void executeDragDropTransfer(List<Path> selectedPaths, Path targetDirectory, boolean move) {
+        if (selectedPaths == null || selectedPaths.isEmpty() || targetDirectory == null) {
+            statusBarController.showMessage("Drag and drop ignored.");
+            return;
+        }
+
+        String commandId = move ? "file.move" : "file.copy";
+        Optional<Command> optionalCommand = commandRegistry.findById(commandId);
+        if (optionalCommand.isEmpty()) {
+            statusBarController.showMessage("Unknown command: " + commandId);
+            return;
+        }
+
+        Path activeDirectory = selectedPaths.getFirst().getParent();
+        if (activeDirectory == null) {
+            activeDirectory = targetDirectory;
+        }
+
+        CommandContext context = new CommandContext(
+                activeDirectory,
+                targetDirectory,
+                new SelectionSnapshot(selectedPaths),
+                new CancellationToken(),
+                ProgressSink.NO_OP,
+                ProcessOutputSink.NO_OP
+        );
+
+        Map<String, String> params = Map.of("target", targetDirectory.toString());
+        commandExecutor.execute(optionalCommand.get(), context, params)
+                .thenAccept(result -> Platform.runLater(() -> {
+                    leftPaneController.refreshCurrentDirectoryView();
+                    rightPaneController.refreshCurrentDirectoryView();
+                    statusBarController.showMessage(result.message());
+                    if (result.status() == CommandStatus.FAILED) {
+                        showErrorDialog("Drag and Drop", result.message());
+                    }
+                }));
     }
 
     private Path resolveStartPath(String propertyKey, String configuredUiPath, String sessionPath) {
@@ -506,6 +571,15 @@ public class MainWindowController {
 
     private void updateStatus(String message) {
         statusBarController.showMessage(message);
+    }
+
+    private void installPreviewKeyBinding(Scene scene) {
+        scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+            if (event.getCode() == KeyCode.F3) {
+                onQuickPreview();
+                event.consume();
+            }
+        });
     }
 
     private static AppConfig ensureNonNullConfig(AppConfig config) {

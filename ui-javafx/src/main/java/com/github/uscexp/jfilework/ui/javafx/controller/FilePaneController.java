@@ -11,6 +11,9 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
 import javafx.scene.control.Label;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
@@ -31,6 +34,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.function.Consumer;
 import java.util.Locale;
+import java.io.File;
 
 /**
  * Reusable controller for one file pane.
@@ -59,6 +63,7 @@ public class FilePaneController {
     private String paneId = "pane";
     private final FileTypeIconResolver fileTypeIconResolver = new FileTypeIconResolver();
     private final ObservableList<FileItemViewModel> allRows = FXCollections.observableArrayList();
+    private DragDropTargetHandler dragDropTargetHandler = (selectedPaths, targetDirectory, move) -> { };
 
     @FXML
     public void initialize() {
@@ -99,6 +104,23 @@ public class FilePaneController {
         });
 
         filterField.textProperty().addListener((ignoredObs, ignoredOldValue, ignoredNewValue) -> applyFilter());
+
+        fileTable.setOnDragDetected(event -> {
+            List<Path> selected = getSelectedPathsForOperations();
+            if (selected.isEmpty()) {
+                return;
+            }
+
+            Dragboard dragboard = fileTable.startDragAndDrop(TransferMode.COPY, TransferMode.MOVE);
+            javafx.scene.input.ClipboardContent content = new javafx.scene.input.ClipboardContent();
+            List<File> files = selected.stream().map(Path::toFile).toList();
+            content.putFiles(files);
+            dragboard.setContent(content);
+            event.consume();
+        });
+
+        fileTable.setOnDragOver(this::onDragOver);
+        fileTable.setOnDragDropped(this::onDragDropped);
     }
 
     public void configure(String paneId, String paneTitle, FileService fileService, Consumer<String> statusConsumer) {
@@ -154,6 +176,12 @@ public class FilePaneController {
 
     public void refreshCurrentDirectoryView() {
         refreshCurrentDirectory();
+    }
+
+    public void setDragDropTargetHandler(DragDropTargetHandler dragDropTargetHandler) {
+        this.dragDropTargetHandler = dragDropTargetHandler == null
+                ? (selectedPaths, targetDirectory, move) -> { }
+                : dragDropTargetHandler;
     }
 
     @FXML
@@ -240,6 +268,36 @@ public class FilePaneController {
         } catch (IOException e) {
             log.debug("Watch service disabled for pane {} at {}", paneId, currentPath, e);
         }
+    }
+
+    private void onDragOver(DragEvent event) {
+        if (event.getGestureSource() == fileTable) {
+            return;
+        }
+        Dragboard dragboard = event.getDragboard();
+        if (dragboard.hasFiles()) {
+            event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+        }
+        event.consume();
+    }
+
+    private void onDragDropped(DragEvent event) {
+        Dragboard dragboard = event.getDragboard();
+        boolean success = false;
+        if (dragboard.hasFiles() && paneState.getCurrentPath() != null) {
+            List<Path> selectedPaths = dragboard.getFiles().stream().map(File::toPath).toList();
+            boolean move = event.getTransferMode() == TransferMode.MOVE;
+            dragDropTargetHandler.handle(selectedPaths, paneState.getCurrentPath(), move);
+            success = true;
+        }
+
+        event.setDropCompleted(success);
+        event.consume();
+    }
+
+    @FunctionalInterface
+    public interface DragDropTargetHandler {
+        void handle(List<Path> selectedPaths, Path targetDirectory, boolean move);
     }
 }
 
