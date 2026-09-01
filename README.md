@@ -201,6 +201,22 @@ See [`PLUGIN_DEV.md`](PLUGIN_DEV.md) for the plugin development guide.
 
 ---
 
+## Native Packaging (Windows)
+
+The helper script in [`packaging/windows/build-installer.ps1`](packaging/windows/build-installer.ps1) builds a custom runtime image with `jlink` and then packages the app with `jpackage`.
+
+```powershell
+# Full installer flow (requires WiX for `exe` packaging)
+.\packaging\windows\build-installer.ps1
+
+# If WiX is missing, create an app-image instead
+.\packaging\windows\build-installer.ps1 -AllowAppImageFallback
+```
+
+When WiX is installed, the script produces a Windows installer under `ui-javafx\target\packaging\installer`. Without WiX, it falls back to an `app-image` output in the same directory tree.
+
+---
+
 ## Development Milestones
 
 | Milestone | Focus |
@@ -211,4 +227,4 @@ See [`PLUGIN_DEV.md`](PLUGIN_DEV.md) for the plugin development guide.
 | **M3** ✅ | Config-driven toolbar, menus, hotkeys, preferences and session persistence |
 | **M4** ✅ | OS-command adapter + pragmatic security rules |
 | **M5** ✅ | Plugin system (ServiceLoader, isolated loader, demo plugin) |
-| **M6** 🚧 | Polishing, tabs, drag & drop, native packaging (6.1-6.5 + 6.7 + 6.10 + 6.11 done) |
+| **M6** 🚧 | Polishing, tabs, drag & drop, native packaging (6.1-6.5 + 6.7 + 6.8 + 6.10 + 6.11 done) |
