@@ -43,6 +43,7 @@
 | `params` | Objekt | nein | String-Parameter fuer Command |
 | `shortcut` | String | nein | JavaFX KeyCombination, z. B. `F5`, `CTRL+R` |
 | `placement` | Array[String] | nein | `toolbar.main`, `menu.file`, `menu.tools` |
+| `icon` | String | nein | Pfad zum Icon-Bild (z. B. `/image/copy.png`); bei `os.exec` ohne `icon` wird automatisch das Icon der EXE-Datei verwendet |
 
 ## Parameter-Templates
 
@@ -57,5 +58,28 @@
 |---|---|---|---|
 | `exe` | String | ja | Absoluter Pfad des auszufuehrenden Programms |
 | `args` | String | nein | Argument-Zeichenkette; wird ohne Shell tokenisiert |
+
+## Icon-Reduzierung bei Toolbar-Buttons
+
+Toolbar-Buttons zeigen standardmssig ein Icon mit dem `label` als Tooltip. Die Auflsung folgt dieser Prioritt:
+
+1. `icon` aus der Action-Konfiguration (z. B. `/image/copy.png`) — wenn gesetzt, hat das Vorrang
+2. Bei `commandId: "os.exec"` ohne konfiguriertes `icon`: das von der `exe`-Datei extrahierte System-Icon (unter Windows via `FileSystemView`)
+3. Fallback: nur der `label` als Button-Text, kein Icon
+
+Beispiel `os.exec` Action ohne eigenes `icon` (verwendet automatisch das EXE-Icon):
+
+```json
+{
+  "id": "openInNotepadPlusPlus",
+  "label": "Open in Notepad++",
+  "commandId": "os.exec",
+  "params": {
+    "exe": "C:/Program Files/Notepad++/notepad++.exe",
+    "args": "${selection.paths}"
+  },
+  "placement": ["menu.tools", "toolbar.main"]
+}
+```
 
 

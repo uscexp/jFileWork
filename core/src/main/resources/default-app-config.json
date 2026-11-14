@@ -19,7 +19,8 @@
         "target": "${inactivePane.path}"
       },
       "shortcut": "F5",
-      "placement": ["toolbar.main", "menu.file"]
+      "placement": ["toolbar.main", "menu.file"],
+      "icon": "/image/copy.png"
     },
     {
       "id": "moveToOtherPane",
@@ -29,7 +30,8 @@
         "target": "${inactivePane.path}"
       },
       "shortcut": "F6",
-      "placement": ["toolbar.main", "menu.file"]
+      "placement": ["toolbar.main", "menu.file"],
+      "icon": "/image/move.png"
     },
     {
       "id": "makeDirectory",
@@ -39,7 +41,8 @@
         "name": "${prompt:Folder name}"
       },
       "shortcut": "F7",
-      "placement": ["toolbar.main", "menu.file"]
+      "placement": ["toolbar.main", "menu.file"],
+      "icon": "/image/create-folder.png"
     },
     {
       "id": "deleteSelection",
@@ -47,7 +50,8 @@
       "commandId": "file.delete",
       "params": {},
       "shortcut": "F8",
-      "placement": ["toolbar.main", "menu.file"]
+      "placement": ["toolbar.main", "menu.file"],
+      "icon": "/image/delete.png"
     },
     {
       "id": "renameSelection",
@@ -57,7 +61,8 @@
         "name": "${prompt:New name}"
       },
       "shortcut": "F2",
-      "placement": ["menu.file"]
+      "placement": ["menu.file"],
+      "icon": "/image/rename.png"
     }
   ]
 }

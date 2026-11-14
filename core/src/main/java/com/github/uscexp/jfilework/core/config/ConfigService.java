@@ -111,7 +111,8 @@ public class ConfigService {
                         action.commandId().trim(),
                         action.params() == null ? Map.of() : action.params(),
                         action.shortcut() == null ? "" : action.shortcut().trim(),
-                        action.placement() == null ? List.of() : action.placement().stream().map(String::trim).toList()
+                        action.placement() == null ? List.of() : action.placement().stream().map(String::trim).toList(),
+                        action.icon()
                 ))
                 .toList();
 

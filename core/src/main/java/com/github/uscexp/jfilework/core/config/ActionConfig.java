@@ -12,7 +12,8 @@ public record ActionConfig(
         String commandId,
         Map<String, String> params,
         String shortcut,
-        List<String> placement
+        List<String> placement,
+        String icon
 ) {
 }
 

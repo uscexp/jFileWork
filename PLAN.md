@@ -61,7 +61,7 @@ com.github.uscexp.jfilework
     {
       "id": "copyToOtherPane",
       "label": "Copy",
-      "icon": "copy",
+      "icon": "/image/copy.png",
       "commandId": "file.copy",
       "params": { "target": "${inactivePane.path}" },
       "shortcut": "F5",
@@ -256,7 +256,7 @@ public interface CommandPlugin {
 
 | # | Story | Kernsymbole |
 |---|-------|-------------|
-| 6.1 ✅ | Datei-Icons je Typ (via `FileTypeIconResolver`) | `FileTypeIconResolver` |
+| 6.1 ✅ | Datei-Icons je Typ (via `FileTypeIconResolver`, ImageView statt ASCII-Text) | `FileTypeIconResolver` |
 | 6.2 ✅ | Filter / Schnellsuche je Pane (Dateiname-Muster) | `FilePaneController` |
 | 6.3 ✅ | Tabs je Pane für mehrere parallele Verzeichnisse | `MainWindowController`, `main-window.fxml` |
 | 6.4 ✅ | Drag & Drop zwischen Panes (löst `file.copy`/`file.move` aus) | `FilePaneController`, `MainWindowController` |

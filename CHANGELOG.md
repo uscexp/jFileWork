@@ -5,6 +5,12 @@ Alle nennenswerten Aenderungen an jFileWork werden hier dokumentiert.
 ## [Unreleased]
 
 ### Added
+- Toolbar-Buttons zeigen nun echte Image-Icons (konfigurierbar via `icon` in `app-config.json`) mit `label` als Tooltip
+- `os.exec` Actions ohne eigenes `icon` verwenden automatisch das System-Icon der `.exe`-Datei (Windows)
+- `FileTypeIconResolver` liefert nun `ImageView` statt ASCII-Text (`[D]`, `[T]`, etc.) für die Datei-Spalte in den Panes
+- ".." Parent-Link zeigt nun das Ordner-Icon statt des Datei-Icons
+
+### Changed
 - Weitere Stabilisierung und kleine Doku-Korrekturen.
 
 ## [0.0.1-Alpha] - 2026-09-01

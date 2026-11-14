@@ -13,7 +13,8 @@ public record ConfiguredAction(
         Map<String, String> params,
         String shortcut,
         List<String> placement,
-        boolean enabled
+        boolean enabled,
+        String icon
 ) {
 }
 

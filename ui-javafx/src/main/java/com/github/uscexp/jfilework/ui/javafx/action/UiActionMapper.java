@@ -45,7 +45,8 @@ public class UiActionMapper {
                 actionConfig.params() == null ? Map.of() : actionConfig.params(),
                 actionConfig.shortcut() == null ? "" : actionConfig.shortcut(),
                 actionConfig.placement() == null ? List.of() : actionConfig.placement(),
-                available
+                available,
+                actionConfig.icon()
         );
     }
 }
