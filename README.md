@@ -103,7 +103,7 @@ The application is configured via `config/app-config.json`.
 
 ### Example actions
 
-Toolbar button that calls 7-Zip:
+Toolbar button that calls 7-Zip (with configured icon):
 
 ```json
 {
@@ -121,7 +121,32 @@ Toolbar button that calls 7-Zip:
         "exe": "C:/Program Files/7-Zip/7z.exe",
         "args": "a archive.7z ${selection.paths}"
       },
-      "placement": ["menu.tools"]
+      "shortcut": "",
+      "placement": ["menu.tools"],
+      "icon": "/image/archive.png"
+    }
+  ]
+}
+```
+
+Toolbar button without configured icon — the system icon of the `.exe` is used automatically (Windows only):
+
+```json
+{
+  "security": {
+    "allowOsCommands": true,
+    "allowedExecutables": ["C:/Program Files/Notepad++/notepad++.exe"]
+  },
+  "actions": [
+    {
+      "id": "openInNotepadPlusPlus",
+      "label": "Open in Notepad++",
+      "commandId": "os.exec",
+      "params": {
+        "exe": "C:/Program Files/Notepad++/notepad++.exe",
+        "args": "${selection.paths}"
+      },
+      "placement": ["menu.tools", "toolbar.main"]
     }
   ]
 }
@@ -207,7 +232,7 @@ See [`PLUGIN_DEV.md`](PLUGIN_DEV.md) for the plugin development guide.
 
 ## UX Notes (M6)
 
-- Each pane shows a lightweight type icon (`[D]`, `[T]`, `[I]`, `[A]`, `[F]`) in the first table column.
+- Each pane shows a real image icon per file type (folder, text, code, image, archive, executable, generic file) in the first table column.
 - Each side now uses tabs, so multiple directories can stay open in parallel.
 - Use `View -> New Left Tab`, `View -> New Right Tab`, and `View -> Close Active Tab`.
 - The inline filter field above each pane hides non-matching entries by filename.

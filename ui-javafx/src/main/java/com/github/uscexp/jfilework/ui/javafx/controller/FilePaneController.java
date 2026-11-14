@@ -7,6 +7,7 @@ import com.github.uscexp.jfilework.ui.javafx.model.FileItemViewModel;
 import com.github.uscexp.jfilework.ui.javafx.model.FileTypeIconResolver;
 import com.github.uscexp.jfilework.ui.javafx.model.PaneStateViewModel;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -20,6 +21,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.image.ImageView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +51,7 @@ public class FilePaneController {
     @FXML private TextField pathField;
     @FXML private TextField filterField;
     @FXML private TableView<FileItemViewModel> fileTable;
-    @FXML private TableColumn<FileItemViewModel, String> iconColumn;
+    @FXML private TableColumn<FileItemViewModel, ImageView> iconColumn;
     @FXML private TableColumn<FileItemViewModel, String> nameColumn;
     @FXML private TableColumn<FileItemViewModel, String> sizeColumn;
     @FXML private TableColumn<FileItemViewModel, String> modifiedColumn;
@@ -69,7 +71,7 @@ public class FilePaneController {
     public void initialize() {
         fileTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
 
-        iconColumn.setCellValueFactory(cell -> new SimpleStringProperty(fileTypeIconResolver.resolve(cell.getValue())));
+        iconColumn.setCellValueFactory(cell -> new SimpleObjectProperty<>(fileTypeIconResolver.resolve(cell.getValue())));
         nameColumn.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().getName()));
         sizeColumn.setCellValueFactory(cell -> {
             FileItemViewModel item = cell.getValue();

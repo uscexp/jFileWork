@@ -125,7 +125,8 @@ Toolbar buttons, menu items and hotkeys are **not hard-coded** — they are load
       "commandId": "file.copy",
       "params":    { "target": "${inactivePane.path}" },
       "shortcut":  "F5",
-      "placement": ["toolbar.main", "menu.file"]
+      "placement": ["toolbar.main", "menu.file"],
+      "icon":      "/image/copy.png"
     }
   ]
 }
@@ -133,6 +134,7 @@ Toolbar buttons, menu items and hotkeys are **not hard-coded** — they are load
 - `UiActionMapper` resolves `commandId` → `CommandRegistry` → JavaFX action.
 - Missing command → UI element is **disabled** (never an error dialog).
 - Parameter templates: `${activePane.path}`, `${inactivePane.path}`, `${selection.paths}`.
+- Optional `icon` field per action: path to an image (e.g. `/image/copy.png`). Toolbar buttons show the icon with `label` as tooltip; if no `icon` is configured and the action is `os.exec`, the system icon of the referenced `.exe` is used; otherwise the label is shown as button text.
 
 ### Plugin System
 - Plugin JARs are placed in the `plugins/` directory.
